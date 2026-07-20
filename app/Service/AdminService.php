@@ -424,4 +424,42 @@ class AdminService
         $db->table('operateur')->where('id', $id)->delete();
         return ['success' => true, 'message' => 'Préfixe supprimé.'];
     }
+
+    public function getCommission(int $id): array
+    {
+        $db = $this->db();
+        if ($id < 1 || !$this->tableExists($db, 'operateur')) {
+            return ['success' => false, 'message' => 'Opérateur introuvable.', 'commission' => 0.0];
+        }
+        try {
+            $row = $db->table('operateur')
+                ->select('comission_ptc')
+                ->where('id', $id)
+                ->get()
+                ->getRowArray();
+
+            return [
+                'success' => true,
+                'commission' => (float) ($row['comission_ptc'] ?? 0.0)
+            ];
+        } catch (Throwable $exception) {
+            return ['success' => false, 'message' => 'Erreur de lecture.', 'commission' => 0.0];
+        }
+    }
+
+    public function saveCommission(int $id, float $pourcentage): array
+    {
+        $db = $this->db();
+        if ($id < 1 || !$this->tableExists($db, 'operateur') || $pourcentage < 0) {
+            return ['success' => false, 'message' => 'Données ou pourcentage invalides.'];
+        }
+        try {
+            $db->table('operateur')
+                ->where('id', $id)
+                ->update(['comission_ptc' => $pourcentage]);
+            return ['success' => true, 'message' => 'Commission mise à jour avec succès.'];
+        } catch (Throwable $exception) {
+            return ['success' => false, 'message' => 'Impossible de sauvegarder la commission.'];
+        }
+    }
 }
