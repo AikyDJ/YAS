@@ -2,14 +2,25 @@
 
 namespace App\Controllers;
 
+use App\Service\ClientService;
+
 class Client extends BaseController
 {
+    private $clientService;
+
+    public function __construct()
+    {
+        $this->clientService = new ClientService();
+    }
+
     public function dashboard(): string
     {
+        $id_client = session()->get('id_client');
+
         $data = [
-            'solde'     => 0,
-            'monnaie'   => 'FC',
-            'operations'=> [],
+            'solde'      => $id_client ? $this->clientService->getSolde($id_client) : 0,
+            'monnaie'    => 'FC',
+            'operations' => $id_client ? $this->clientService->getOperations($id_client) : [],
         ];
 
         return view('user/dahsboard', $data);
@@ -17,23 +28,33 @@ class Client extends BaseController
 
     public function procederOperation()
     {
-        $type = $this->request->getPost('type_operation');
-        $montant = $this->request->getPost('montant');
-        $codeSecret = $this->request->getPost('code_secret');
+        $id_client   = session()->get('id_client');
+        $type        = $this->request->getPost('type_operation');
+        $montant     = (float) $this->request->getPost('montant');
+        $codeSecret  = $this->request->getPost('code_secret');
 
-        // TODO: validation + traitement (depot/retrait)
+        $result = $this->clientService->insertOperation($id_client, $type, $montant, $codeSecret);
 
-        return redirect()->to('/client/dashboard')->with('success', 'Opération effectuée avec succès.');
+        if ($result['success']) {
+            return redirect()->to('/client/dashboard')->with('success', $result['message']);
+        }
+
+        return redirect()->to('/client/dashboard')->with('error', $result['message']);
     }
 
     public function procederTransfert()
     {
-        $destinataire = $this->request->getPost('destinataire');
-        $montant = $this->request->getPost('montant');
-        $codeSecret = $this->request->getPost('code_secret');
+        $id_client     = session()->get('id_client');
+        $destinataire  = $this->request->getPost('destinataire');
+        $montant       = (float) $this->request->getPost('montant');
+        $codeSecret    = $this->request->getPost('code_secret');
 
-        // TODO: validation + traitement transfert
+        $result = $this->clientService->insertTransfert($id_client, $destinataire, $montant, $codeSecret);
 
-        return redirect()->to('/client/dashboard')->with('success', 'Transfert effectué avec succès.');
+        if ($result['success']) {
+            return redirect()->to('/client/dashboard')->with('success', $result['message']);
+        }
+
+        return redirect()->to('/client/dashboard')->with('error', $result['message']);
     }
 }
