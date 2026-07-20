@@ -2,23 +2,32 @@
 
 namespace App\Controllers;
 
+use App\Service\ClientService;
+use App\Service\OperationService;
+
 class Client extends BaseController
 {
+    private $clientService;
+    private $operationService;
+
+    public function __construct()
+    {
+        $this->clientService = new ClientService();
+        $this->operationService = new OperationService();
+    }
+
     public function dashboard(): string
     {
+        $id_client = session()->get('id_client');
+        $client = $id_client ? $this->clientService->getClientOperateurById($id_client) : null;
         $data = [
-            'nom'        => 'Rakoto',
-            'prenom'     => 'Jean',
-            'code_client'=> '0331234',
-            'solde'      => 125000,
+            'solde'      => $id_client ? $this->clientService->getSolde($id_client) : 0,
             'monnaie'    => 'Ar',
-            'operations' => [],
-            'frais'      => [
-                ['min' => 0,     'max' => 10000,  'pct' => 1.5],
-                ['min' => 10001, 'max' => 50000,  'pct' => 2.0],
-                ['min' => 50001, 'max' => 100000, 'pct' => 2.5],
-                ['min' => 100001,'max' => 500000, 'pct' => 3.0],
-            ],
+            'nom' => $client ? $client['nom'] : '',
+            'code_client' => $client ? '+261'. $client['code_operateur'] . $client['code_client'] : '',
+            'prenom' => $client ? $client['prenom'] : '',
+            'operations' => $id_client ? $this->clientService->getOperations($id_client) : [],
+            'frais'     => $id_client ? $this->operationService->getAllFraisTranches() : []
         ];
 
         return view('user/dahsboard', $data);
@@ -26,30 +35,33 @@ class Client extends BaseController
 
     public function procederOperation()
     {
-        $type = $this->request->getPost('type_operation');
-        $montant = $this->request->getPost('montant');
-        $codeSecret = $this->request->getPost('code_secret');
+        $id_client   = session()->get('id_client');
+        $type        = $this->request->getPost('type_operation');
+        $montant     = (float) $this->request->getPost('montant');
+        $codeSecret  = $this->request->getPost('code_secret');
 
-        // TODO: validation + traitement (depot/retrait)
+        $result = $this->clientService->insertOperation($id_client, $type, $montant, $codeSecret);
 
-        return redirect()->to('/client/dashboard')->with('success', 'Opération effectuée avec succès.');
+        if ($result['success']) {
+            return redirect()->to('/client/dashboard')->with('success', $result['message']);
+        }
+
+        return redirect()->to('/client/dashboard')->with('error', $result['message']);
     }
 
     public function procederTransfert()
     {
-        $destinataire = $this->request->getPost('destinataire');
-        $montant = $this->request->getPost('montant');
-        $codeSecret = $this->request->getPost('code_secret');
+        $id_client     = session()->get('id_client');
+        $destinataire  = $this->request->getPost('destinataire');
+        $montant       = (float) $this->request->getPost('montant');
+        $codeSecret    = $this->request->getPost('code_secret');
 
-        // TODO: validation + traitement transfert
+        $result = $this->clientService->insertTransfert($id_client, $destinataire, $montant, $codeSecret);
 
-        return redirect()->to('/client/dashboard')->with('success', 'Transfert effectué avec succès.');
-    }
+        if ($result['success']) {
+            return redirect()->to('/client/dashboard')->with('success', $result['message']);
+        }
 
-    public function logout()
-    {
-        // TODO: détruire la session client
-
-        return redirect()->to('/');
+        return redirect()->to('/client/dashboard')->with('error', $result['message']);
     }
 }

@@ -12,7 +12,7 @@
             <div class="login-logo">YAS</div>
             <p class="login-subtitle">Mobile Money</p>
 
-            <form action="" method="POST" class="login-form">
+            <form action="<?= base_url('/auth') ?>" method="POST" class="login-form">
                 <?= csrf_field() ?>
 
                 <div class="form-group">
