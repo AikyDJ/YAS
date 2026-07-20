@@ -162,19 +162,19 @@ class ClientService
 
 
             if (!$this->verifyCodeSecret($id_client, $code_secret)) {
-                $result = ['success' => false, 'message' => 'Code secret incorrect.'];
+                $result = ['error' => true, 'message' => 'Code secret incorrect.'];
             }
 
             $type_id = $this->getTypeOperationId($type_nom);
             if ($type_id === null) {
-                $result = ['success' => false, 'message' => 'Type d\'opération inconnu.'];
+                $result = ['error' => true, 'message' => 'Type d\'opération inconnu.'];
             }
 
             $solde = $this->getSolde($id_client);
             $frais = $this->calculerFrais($montant);
 
             if (strtolower($type_nom) === 'retrait' && ($montant + $frais) > $solde) {
-                $result = ['success' => false, 'message' => 'Solde insuffisant pour ce retrait.'];
+                $result = ['error' => true, 'message' => 'Solde insuffisant pour ce retrait.'];
             }
 
             $data = [
@@ -188,7 +188,7 @@ class ClientService
 
             $this->operationModel->insert($data);
         } catch (\Exception $e) {
-            $result = ['success' => false, 'message' => 'Erreur lors de l\'opération : ' . $e->getMessage()];
+            $result = ['error' => true, 'message' => 'Erreur lors de l\'opération : ' . $e->getMessage()];
         }
         return $result;
     }
@@ -198,12 +198,12 @@ class ClientService
      */
     public function insertTransfert(int $id_emetteur, string $code_destinataire, float $montant, string $code_secret): array
     {
-        $result = ['success' => true, 'message' => 'Transfert effectué avec succès.'];
+        $result = ['error' => false, 'message' => 'Transfert effectué avec succès.'];
         try {
 
 
             if ($montant <= 0 || !$this->verifyCodeSecret($id_emetteur, $code_secret)) {
-                return ['success' => false, 'message' => 'Montant ou code secret incorrect.'];
+                return ['error' => true, 'message' => 'Montant ou code secret incorrect.'];
             }
 
             $code_destinataire = preg_replace('/\D/', '', $code_destinataire);
@@ -212,21 +212,19 @@ class ClientService
             }
             $destinataire = $this->getClientDetails($code_destinataire);
             if (!$destinataire) {
-                $result = ['success' => false, 'message' => 'Destinataire introuvable.'];
+                $result = ['error' => true, 'message' => 'Destinataire introuvable.'];
             }
             // verifier detinater meme operateur
             $emetteur = $this->getClientById($id_emetteur);
-            if ($emetteur && $destinataire && $emetteur['id_operateur'] !== $destinataire['id_operateur']) {
-                $result = ['success' => false, 'message' => 'Le destinataire doit être du même opérateur.'];
-            }
+
 
             if ((int) $destinataire['id'] === $id_emetteur) {
-                return ['success' => false, 'message' => 'Vous ne pouvez pas vous transférer à vous-même.'];
+                return ['error' => true, 'message' => 'Vous ne pouvez pas vous transférer à vous-même.'];
             }
 
             $type_id = $this->getTypeOperationId('transfaire');
             if ($type_id === null) {
-                return ['success' => false, 'message' => 'Type d\'opération inconnu.'];
+                return ['error' => true, 'message' => 'Type d\'opération inconnu.'];
             }
 
             $solde = $this->getSolde($id_emetteur);
@@ -234,7 +232,7 @@ class ClientService
             $comission = $this->calculerComission($montant, $emetteur['id_operateur'], $destinataire['id_operateur']);
 
             if (($montant + $frais + $comission) > $solde) {
-                $result = ['success' => false, 'message' => 'Solde insuffisant pour ce transfert.'];
+                $result = ['error' => true, 'message' => 'Solde insuffisant pour ce transfert.'];
             }
 
             $data = [
@@ -258,8 +256,9 @@ class ClientService
         if ($id_emetteur !== $id_destinataire) {
             $destinataireOperateur = $this->operateurModel->find($id_destinataire);
             return $montant * $destinataireOperateur['comission_ptc'];
-            }
-            return 0.0;
+        }
+        return 0.0;
+
 
     }
 }
