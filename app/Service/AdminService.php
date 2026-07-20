@@ -1,31 +1,116 @@
 <?php
+
 namespace App\Service;
 
-use app\Models\Client;
-use app\Models\Operation;
-use app\Models\Typeoperation;
-use app\Models\Views\Operationclient;
-use app\Models\Views\Soldeclient;
+use Throwable;
 
-class AdminService{
-    private $client;
-    private $operation;
-    private $typeoperation;
-    private $soldeclient;
+class AdminService
+{
+    private function db()
+    {
+        return \Config\Database::connect();
+    }
 
-    public function getSituationGain(){
-        $db = \Config\Database::connect();
+    private function tableExists($db, string $table): bool
+    {
+        try {
+            $result = $db->query(
+                'SELECT name FROM sqlite_master WHERE type IN (\'table\', \'view\') AND name = ?',
+                [$table]
+            )->getRowArray();
 
-        $totalFrais = $db->table('v_operation_client v')
-            ->select('v.nom_client_primaire, v.prenom_client_primaire, v.type_operation, SUM(v.montant_frais) AS total_frais, COUNT(v.id_operation) AS nb_operations')
-            ->groupBy('v.id_client_primaire, v.type_operation')
-            ->get()
-            ->getResultArray();
+            return !empty($result);
+        } catch (Throwable $exception) {
+            return false;
+        }
+    }
 
-        $gainsTotal = $db->table('v_operation_client')
-            ->select('SUM(montant_frais) AS total_gains')
-            ->get()
-            ->getRowArray();
+    private function normalizePrefix(array $row): array
+    {
+        return [
+            'id'      => $row['id'] ?? null,
+            'nom'     => $row['nom'] ?? null,
+            'prefixe' => $row['code_operateur'] ?? ($row['prefixe'] ?? ''),
+        ];
+    }
+
+    private function normalizeCompte(array $row): array
+    {
+        return [
+            'id_client'           => $row['id_client'] ?? null,
+            'telephone'           => $row['code_client_complet'] ?? ($row['telephone'] ?? ''),
+            'solde'               => (float) ($row['solde_actuel'] ?? ($row['solde'] ?? 0)),
+            'nom'                 => $row['nom'] ?? null,
+            'prenom'              => $row['prenom'] ?? null,
+            'code_client_complet' => $row['code_client_complet'] ?? null,
+        ];
+    }
+
+    private function normalizeBareme(array $row): array
+    {
+        return [
+            'id'             => $row['id'] ?? null,
+            'type_operation' => $row['type_operation'] ?? 'N/A',
+            'montant_min'    => $row['montant_min'] ?? ($row['min_montant'] ?? 0),
+            'montant_max'    => $row['montant_max'] ?? ($row['max_montant'] ?? 0),
+            'montant'        => $row['montant'] ?? null,
+            'min_montant'    => $row['min_montant'] ?? ($row['montant_min'] ?? null),
+            'max_montant'    => $row['max_montant'] ?? ($row['montant_max'] ?? null),
+        ];
+    }
+
+    private function safeTableRows(string $table, ?callable $normalizer = null, string $orderBy = ''): array
+    {
+        $db = $this->db();
+        $rows = [];
+
+        if ($this->tableExists($db, $table)) {
+            try {
+                $builder = $db->table($table);
+
+                if ($orderBy !== '') {
+                    $builder->orderBy($orderBy);
+                }
+
+                $rows = $builder->get()->getResultArray();
+            } catch (Throwable $exception) {
+                $rows = [];
+            }
+        }
+
+        if ($normalizer !== null && !empty($rows)) {
+            $rows = array_map($normalizer, $rows);
+        }
+
+        return $rows;
+    }
+
+    public function getSituationGain()
+    {
+        $db = $this->db();
+
+        if (!$this->tableExists($db, 'operation') || !$this->tableExists($db, 'client') || !$this->tableExists($db, 'type_operation')) {
+            return [
+                'par_client'  => [],
+                'total_gains' => 0,
+            ];
+        }
+
+        try {
+            $totalFrais = $db->table('operation o')
+                ->select('c.nom, c.prenom, o.id_type_operation, t.nom AS type_op, SUM(o.montant_frais) AS total_frais, COUNT(o.id) AS nb_operations')
+                ->join('client c', 'c.id = o.id_primary_client')
+                ->join('type_operation t', 't.id = o.id_type_operation')
+                ->groupBy('c.id, o.id_type_operation')->get()->getResultArray();
+
+            $gainsTotal = $db->table('operation')
+                ->select('SUM(montant_frais) AS total_gains')->get()->getRowArray();
+        } catch (Throwable $exception) {
+            return [
+                'par_client'  => [],
+                'total_gains' => 0,
+            ];
+        }
 
         return [
             'par_client'  => $totalFrais,
@@ -33,43 +118,141 @@ class AdminService{
         ];
     }
 
-    public function addNewPrefix($data){
-        $db = \Config\Database::connect();
+    public function getDashboardData(): array
+    {
+        $db = $this->db();
 
-        $exists = $db->table('operateur')->where('code_operateur', $data['code_operateur'])->countAllResults();
-
-        if($exists > 0){
-            return ['success' => false, 'message' => 'Préfixe existant'];
-        }
-
-        $db->table('operateur')->insert([
-            'nom'            => $data['nom'],
-            'code_operateur' => $data['code_operateur'],
-        ]);
-
-        return ['success' => true, 'message' => 'Préfixe ajouté.'];
+        return [
+            'total_comptes'   => $this->tableExists($db, 'client') ? (int) $db->table('client')->countAllResults() : 0,
+            'prefixes'        => $this->getPrefixes(),
+            'nb_operations'   => $this->tableExists($db, 'operation') ? (int) $db->table('operation')->countAllResults() : 0,
+            'gains_retrait'   => $this->getGainsByType('retrait'),
+            'gains_transfert' => $this->getGainsByType('transfaire'),
+            'comptes'         => $this->getComptes(),
+        ];
     }
 
-    public function createFraisTranche($data){
-        $db = \Config\Database::connect();
-
-        $exists = $db->table('frais_barem')
-            ->where('min_montant <=', $data['max_montant'])
-            ->where('max_montant >=', $data['min_montant'])
-            ->countAllResults();
-
-        if($exists > 0){
-            return ['success' => false, 'message' => 'Chevauchement avec une tranche existante.'];
-        }
-
-        $db->table('frais_barem')->insert([
-            'montant'     => $data['montant'],
-            'min_montant' => $data['min_montant'],
-            'max_montant' => $data['max_montant'],
-        ]);
-
-        return ['success' => true, 'message' => 'Tranche de frais créée.'];
+    public function getPrefixes(): array
+    {
+        return $this->safeTableRows('operateur', [$this, 'normalizePrefix'], 'code_operateur ASC');
     }
 
+    public function getComptes(): array
+    {
+        $db = $this->db();
 
+        if (!$this->tableExists($db, 'v_solde_client')) {
+            return [];
+        }
+
+        try {
+            $rows = $db->table('v_solde_client')->get()->getResultArray();
+
+            return array_map([$this, 'normalizeCompte'], $rows);
+        } catch (Throwable $exception) {
+            return [];
+        }
+    }
+
+    public function getBaremes(): array
+    {
+        return $this->safeTableRows('frais_barem', [$this, 'normalizeBareme'], 'min_montant ASC');
+    }
+
+    public function getBaremeById($id): ?array
+    {
+        $db = $this->db();
+
+        if (!$this->tableExists($db, 'frais_barem')) {
+            return null;
+        }
+
+        try {
+            $bareme = $db->table('frais_barem')->where('id', $id)->get()->getRowArray();
+
+            return $bareme ? $this->normalizeBareme($bareme) : null;
+        } catch (Throwable $exception) {
+            return null;
+        }
+    }
+
+    private function getGainsByType(string $type): float
+    {
+        $db = $this->db();
+
+        if (!$this->tableExists($db, 'v_operation_client')) {
+            return 0.0;
+        }
+
+        try {
+            $result = $db->table('v_operation_client')
+                ->select('SUM(montant_frais) AS total')
+                ->where('type_operation', $type)
+                ->get()
+                ->getRowArray();
+
+            return (float) ($result['total'] ?? 0);
+        } catch (Throwable $exception) {
+            return 0.0;
+        }
+    }
+
+    public function addNewPrefix($data)
+    {
+        $db = $this->db();
+        $success = false;
+        $message = 'Préfixe ajouté.';
+
+        $codeOperateur = trim((string) ($data['code_operateur'] ?? ''));
+        if (!$this->tableExists($db, 'operateur')) {
+            $message = 'Base de données non initialisée.';
+        } elseif ($codeOperateur === '') {
+            $message = 'Préfixe invalide.';
+        } else {
+            $exists = $db->table('operateur')->where('code_operateur', $codeOperateur)->countAllResults();
+
+            if ($exists > 0) {
+                $message = 'Préfixe existant';
+            } else {
+                $nom = trim((string) ($data['nom'] ?? ''));
+
+                if ($nom === '') {
+                    $nom = 'Préfixe ' . $codeOperateur;
+                }
+
+                try {
+                    $db->table('operateur')->insert([
+                        'nom'            => $nom,
+                        'code_operateur' => $codeOperateur,
+                    ]);
+                    $success = true;
+                } catch (Throwable $exception) {
+                    $message = 'Impossible d’ajouter le préfixe.';
+                }
+            }
+        }
+
+        return ['success' => $success, 'message' => $message];
+    }
+
+    public function createFraisTranche(array $data)
+    {
+        $db = $this->db();
+
+        if (!$this->tableExists($db, 'frais_barem')) {
+            return ['success' => false, 'message' => 'Base de données non initialisée.'];
+        }
+
+        try {
+            $db->table('frais_barem')->insert([
+                'montant'     => $data['montant'] ?? 0,
+                'min_montant' => $data['min_montant'] ?? 0,
+                'max_montant' => $data['max_montant'] ?? 0,
+            ]);
+        } catch (Throwable $exception) {
+            return ['success' => false, 'message' => 'Impossible d’enregistrer le barème.'];
+        }
+
+        return ['success' => true, 'message' => 'Barème enregistré.'];
+    }
 }

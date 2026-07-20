@@ -15,44 +15,18 @@ class Admin extends BaseController
 
     public function dashboard(): string
     {
-        $db = \Config\Database::connect();
+        $data = $this->adminService->getDashboardData();
 
         $gains = $this->adminService->getSituationGain();
-
-        $totalComptes = $db->table('client')->countAllResults();
-        $nbOperations = $db->table('operation')->countAllResults();
-        $prefixes = $db->table('operateur')->get()->getResultArray();
-        $comptes = $db->table('v_solde_client')->get()->getResultArray();
-
-        $data = [
-            'total_comptes'   => $totalComptes,
-            'prefixes'        => $prefixes,
-            'nb_operations'   => $nbOperations,
-            'gains_retrait'   => $this->getGainsByType($db, 'retrait'),
-            'gains_transfert' => $this->getGainsByType($db, 'transfaire'),
-            'comptes'         => $comptes,
-        ];
+        $data['total_gains'] = $gains['total_gains'] ?? 0;
 
         return view('admin/dashboard', $data);
     }
 
-    private function getGainsByType($db, $type): float
-    {
-        $result = $db->table('v_operation_client')
-            ->select('SUM(montant_frais) AS total')
-            ->where('type_operation', $type)
-            ->get()
-            ->getRowArray();
-
-        return $result['total'] ?? 0;
-    }
-
     public function prefixes(): string
     {
-        $db = \Config\Database::connect();
-
         $data = [
-            'prefixes' => $db->table('operateur')->get()->getResultArray(),
+            'prefixes' => $this->adminService->getPrefixes(),
         ];
 
         return view('admin/prefixes', $data);
@@ -81,11 +55,9 @@ class Admin extends BaseController
 
     public function baremes(): string
     {
-        $db = \Config\Database::connect();
-
         $data = [
             'bareme'  => null,
-            'baremes' => $db->table('frais_barem')->get()->getResultArray(),
+            'baremes' => $this->adminService->getBaremes(),
         ];
 
         return view('admin/baremes', $data);
@@ -94,30 +66,32 @@ class Admin extends BaseController
     public function sauvegarderBareme()
     {
         $tranches = $this->request->getPost('tranches');
+        $saved = false;
 
         if (!empty($tranches)) {
             foreach ($tranches as $tranche) {
                 if (!empty($tranche['min']) && !empty($tranche['max']) && !empty($tranche['frais'])) {
-                    $this->adminService->createFraisTranche([
+                    $result = $this->adminService->createFraisTranche([
                         'montant'     => $tranche['frais'],
                         'min_montant' => $tranche['min'],
                         'max_montant' => $tranche['max'],
                     ]);
+
+                    $saved = $saved || !empty($result['success']);
                 }
             }
         }
 
-        return redirect()->to('/admin/baremes')->with('success', 'Barème enregistré.');
+        return redirect()->to('/admin/baremes')->with('success', $saved ? 'Barème enregistré.' : 'Aucune tranche valide à enregistrer.');
     }
 
     public function modifierBareme($id)
     {
-        $db = \Config\Database::connect();
-        $bareme = $db->table('frais_barem')->where('id', $id)->get()->getRowArray();
+        $bareme = $this->adminService->getBaremeById($id);
 
         $data = [
             'bareme'  => $bareme,
-            'baremes' => $db->table('frais_barem')->get()->getResultArray(),
+            'baremes' => $this->adminService->getBaremes(),
         ];
 
         return view('admin/baremes', $data);
