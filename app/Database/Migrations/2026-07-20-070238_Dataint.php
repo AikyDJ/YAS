@@ -137,7 +137,7 @@ class Dataint extends Migration
                 'null' => false,
             ],
             'date_operation' => [
-                'type' => 'TEXT',
+                'type' => 'DATETIME',
                 'null' => false,
             ],
         ]);
