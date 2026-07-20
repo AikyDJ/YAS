@@ -71,6 +71,10 @@ class Dataint extends Migration
                 'type'           => 'INTEGER',
                 'auto_increment' => true,
             ],
+            'id_type_operation' => [
+                'type' => 'INTEGER',
+                'null' => false,
+            ],
             'montant' => [
                 'type' => 'REAL',
                 'null' => false,
@@ -85,6 +89,7 @@ class Dataint extends Migration
             ],
         ]);
         $this->forge->addPrimaryKey('id');
+        $this->forge->addForeignKey('id_type_operation', 'type_operation', 'id', false, false);
         $this->forge->createTable('frais_barem');
 
         // ---------------------------------------------------------

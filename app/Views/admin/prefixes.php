@@ -13,6 +13,7 @@
                 <nav class="op-nav">
                     <a href="<?= base_url('admin/dashboard') ?>" class="op-link">Vue Générale</a>
                     <a href="<?= base_url('admin/prefixes') ?>" class="op-link active">Préfixes</a>
+                    <a href="<?= base_url('admin/types') ?>" class="op-link">Types</a>
                     <a href="<?= base_url('admin/baremes') ?>" class="op-link">Barèmes</a>
                     <a href="<?= base_url('admin/logout') ?>" class="op-link op-link-logout">Déconnexion</a>
                 </nav>

@@ -30,11 +30,11 @@ class Datainit extends Seeder
         // Barème de frais (exemple)
         // ---------------------------------------------------------
         $this->db->table('frais_barem')->insertBatch([
-            ['montant' => 100, 'min_montant' => 0, 'max_montant' => 5000],
-            ['montant' => 300, 'min_montant' => 5001, 'max_montant' => 20000],
-            ['montant' => 500, 'min_montant' => 20001, 'max_montant' => 50000],
-            ['montant' => 1000, 'min_montant' => 50001, 'max_montant' => 100000],
-            ['montant' => 2000, 'min_montant' => 100001, 'max_montant' => 500000],
+            ['id_type_operation' => 2, 'montant' => 100, 'min_montant' => 0, 'max_montant' => 5000],
+            ['id_type_operation' => 2, 'montant' => 300, 'min_montant' => 5001, 'max_montant' => 20000],
+            ['id_type_operation' => 2, 'montant' => 500, 'min_montant' => 20001, 'max_montant' => 50000],
+            ['id_type_operation' => 3, 'montant' => 1000, 'min_montant' => 50001, 'max_montant' => 100000],
+            ['id_type_operation' => 3, 'montant' => 2000, 'min_montant' => 100001, 'max_montant' => 500000],
         ]);
 
         // ---------------------------------------------------------
@@ -51,16 +51,16 @@ class Datainit extends Seeder
         // Barème de frais (exemple)
         // ---------------------------------------------------------
         $this->db->table('frais_barem')->insertBatch([
-            ['montant' => 50, 'min_montant' => 100, 'max_montant' => 1000],
-            ['montant' => 50, 'min_montant' => 1001, 'max_montant' => 5000],
-            ['montant' => 100, 'min_montant' => 5001, 'max_montant' => 10000],
-            ['montant' => 200, 'min_montant' => 10001, 'max_montant' => 25000],
-            ['montant' => 400, 'min_montant' => 25001, 'max_montant' => 50000],
-            ['montant' => 800, 'min_montant' => 50001, 'max_montant' => 100000],
-            ['montant' => 1500, 'min_montant' => 100001, 'max_montant' => 250000],
-            ['montant' => 1500, 'min_montant' => 250001, 'max_montant' => 500000],
-            ['montant' => 2500, 'min_montant' => 500001, 'max_montant' => 1000000],
-            ['montant' => 3000, 'min_montant' => 1000001, 'max_montant' => 2000000],
+            ['id_type_operation' => 2, 'montant' => 50, 'min_montant' => 100, 'max_montant' => 1000],
+            ['id_type_operation' => 2, 'montant' => 50, 'min_montant' => 1001, 'max_montant' => 5000],
+            ['id_type_operation' => 2, 'montant' => 100, 'min_montant' => 5001, 'max_montant' => 10000],
+            ['id_type_operation' => 2, 'montant' => 200, 'min_montant' => 10001, 'max_montant' => 25000],
+            ['id_type_operation' => 2, 'montant' => 400, 'min_montant' => 25001, 'max_montant' => 50000],
+            ['id_type_operation' => 3, 'montant' => 800, 'min_montant' => 50001, 'max_montant' => 100000],
+            ['id_type_operation' => 3, 'montant' => 1500, 'min_montant' => 100001, 'max_montant' => 250000],
+            ['id_type_operation' => 3, 'montant' => 1500, 'min_montant' => 250001, 'max_montant' => 500000],
+            ['id_type_operation' => 3, 'montant' => 2500, 'min_montant' => 500001, 'max_montant' => 1000000],
+            ['id_type_operation' => 3, 'montant' => 3000, 'min_montant' => 1000001, 'max_montant' => 2000000],
         ]);
 
         // ---------------------------------------------------------

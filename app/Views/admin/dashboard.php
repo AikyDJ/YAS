@@ -13,6 +13,7 @@
                 <nav class="op-nav">
                     <a href="<?= base_url('admin/dashboard') ?>" class="op-link active">Vue Générale</a>
                     <a href="<?= base_url('admin/prefixes') ?>" class="op-link">Préfixes</a>
+                    <a href="<?= base_url('admin/types') ?>" class="op-link">Types</a>
                     <a href="<?= base_url('admin/baremes') ?>" class="op-link">Barèmes</a>
                     <a href="<?= base_url('admin/logout') ?>" class="op-link op-link-logout">Déconnexion</a>
                 </nav>
@@ -36,6 +37,17 @@
                 <div class="stat-label">Gains Total (Ar)</div>
             </div>
         </div>
+
+        <?php if (!empty($total_gains)): ?>
+            <div class="grid-row">
+                <div class="gains-card">
+                    <div class="card">
+                        <h3>Situation Gain</h3>
+                        <p class="empty-text">Gains cumulés des frais: <?= number_format($total_gains, 0, ',', ' ') ?> Ar</p>
+                    </div>
+                </div>
+            </div>
+        <?php endif; ?>
 
         <div class="grid-row grid-2">
             <div class="gains-card">
