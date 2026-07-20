@@ -1,43 +1,52 @@
-<div class="transfert-container" style="padding: 15px;">
-    <h4 style="margin-top: 0; margin-bottom: 20px; color: #333;">Faire un Transfert d'argent</h4>
-
+<div class="transfert-container">
+    <h4>Transfert d'argent</h4>
 
     <?php if (session()->getFlashdata('error')): ?>
-        <div class="alert-message error" style="background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 4px; margin-bottom: 15px; border: 1px solid #f5c6cb;">
+        <div class="alert-message error">
             <?= session()->getFlashdata('error') ?>
         </div>
     <?php endif; ?>
 
     <?php if (session()->getFlashdata('success')): ?>
-        <div class="alert-message success" style="background-color: #d4edda; color: #155724; padding: 10px; border-radius: 4px; margin-bottom: 15px; border: 1px solid #c3e6cb;">
+        <div class="alert-message success">
             <?= session()->getFlashdata('success') ?>
         </div>
     <?php endif; ?>
 
-    <form action="<?= base_url('client/proceder-transfert') ?>" method="POST">
+    <form action="<?= base_url('client/proceder-transfert') ?>" method="POST" id="form-transfert">
         <?= csrf_field() ?>
 
-
-        <div class="form-group" style="margin-bottom: 15px;">
-            <label for="destinataire" style="display: block; margin-bottom: 5px; font-weight: bold; color: #555;">Numéro du destinataire :</label>
-            <input type="text" name="destinataire" id="destinataire" placeholder="Ex: 033xx... ou 037xx..." required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; box-sizing: border-box;">
+        <div class="form-group">
+            <label for="destinataire">Numéro du destinataire</label>
+            <input type="text" name="destinataire" id="destinataire" placeholder="033xx... ou 037xx..." required>
+            <span class="dest-status" id="dest-status"></span>
         </div>
 
-
-        <div class="form-group" style="margin-bottom: 15px;">
-            <label for="montant" style="display: block; margin-bottom: 5px; font-weight: bold; color: #555;">Montant à envoyer :</label>
-            <input type="number" name="montant" id="montant" min="1" step="any" placeholder="Montant en Ar" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; box-sizing: border-box;">
+        <div class="form-group">
+            <label for="montant_t">Montant à envoyer (Ar)</label>
+            <input type="number" name="montant" id="montant_t" min="1" step="any" placeholder="10 000" required>
         </div>
 
-
-        <div class="form-group" style="margin-bottom: 20px;">
-            <label for="code_secret" style="display: block; margin-bottom: 5px; font-weight: bold; color: #555;">Code Secret (4 chiffres) :</label>
-            <input type="password" name="code_secret" id="code_secret" maxlength="4" pattern="[0-9]{4}" placeholder="••••" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; box-sizing: border-box; letter-spacing: 5px; text-align: center;">
+        <div class="fee-preview" id="fee-preview-t" style="display:none;">
+            <div class="fee-row">
+                <span>Montant</span>
+                <span id="fee-montant-t">0 Ar</span>
+            </div>
+            <div class="fee-row">
+                <span>Frais (<span id="fee-pct-t">0</span>%)</span>
+                <span id="fee-amount-t" class="fee-cost">0 Ar</span>
+            </div>
+            <div class="fee-row fee-total">
+                <span>Total débité</span>
+                <span id="fee-total-t">0 Ar</span>
+            </div>
         </div>
 
+        <div class="form-group">
+            <label for="code_secret_t">Code Secret</label>
+            <input type="password" name="code_secret" id="code_secret_t" maxlength="4" pattern="[0-9]{4}" placeholder="••••" required>
+        </div>
 
-        <button type="submit" class="btn-submit" style="width: 100%; background-color: #28a745; color: white; border: none; padding: 12px; border-radius: 4px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s;">
-            Confirmer le transfert
-        </button>
+        <button type="submit" class="btn-submit btn-transfert">Confirmer le transfert</button>
     </form>
 </div>

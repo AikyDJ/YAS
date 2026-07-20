@@ -7,10 +7,11 @@ class Admin extends BaseController
     public function dashboard(): string
     {
         $data = [
-            'total_comptes'   => 0,
+            'total_comptes'   => 42,
             'prefixes'        => [],
-            'gains_retrait'   => 0,
-            'gains_transfert' => 0,
+            'nb_operations'   => 156,
+            'gains_retrait'   => 45000,
+            'gains_transfert' => 128000,
             'comptes'         => [],
         ];
 
@@ -35,8 +36,10 @@ class Admin extends BaseController
         return redirect()->to('/admin/prefixes')->with('success', 'Préfixe ajouté.');
     }
 
-    public function supprimerPrefixe($id)
+    public function supprimerPrefixe()
     {
+        $id = $this->request->getPost('id');
+
         // TODO: suppression en BDD
 
         return redirect()->to('/admin/prefixes')->with('success', 'Préfixe supprimé.');
@@ -56,12 +59,7 @@ class Admin extends BaseController
     {
         $id             = $this->request->getPost('id');
         $typeOperation  = $this->request->getPost('type_operation');
-        $montantMin1    = $this->request->getPost('montant_min_1');
-        $montantMax1    = $this->request->getPost('montant_max_1');
-        $fraisPct1      = $this->request->getPost('frais_pct_1');
-        $montantMin2    = $this->request->getPost('montant_min_2');
-        $montantMax2    = $this->request->getPost('montant_max_2');
-        $fraisPct2      = $this->request->getPost('frais_pct_2');
+        $tranches       = $this->request->getPost('tranches');
 
         // TODO: validation + insert/update en BDD
 
@@ -71,7 +69,10 @@ class Admin extends BaseController
     public function modifierBareme($id)
     {
         $data = [
-            'bareme'  => ['id' => $id, 'type_operation' => '', 'montant_min' => '', 'montant_max' => '', 'frais_pct' => ''],
+            'bareme'  => ['id' => $id, 'type_operation' => 'retrait', 'tranches' => [
+                ['min_montant' => 0, 'max_montant' => 10000, 'frais' => 1.5],
+                ['min_montant' => 10001, 'max_montant' => 50000, 'frais' => 2.0],
+            ]],
             'baremes' => [],
         ];
 
@@ -80,8 +81,10 @@ class Admin extends BaseController
         return view('admin/baremes', $data);
     }
 
-    public function supprimerBareme($id)
+    public function supprimerBareme()
     {
+        $id = $this->request->getPost('id');
+
         // TODO: suppression en BDD
 
         return redirect()->to('/admin/baremes')->with('success', 'Barème supprimé.');
