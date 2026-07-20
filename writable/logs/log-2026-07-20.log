@@ -1,78 +1,30 @@
-CRITICAL - 2026-07-20 06:41:01 --> CodeIgniter\View\Exceptions\ViewException: Invalid file: "login/index.php"
-[Method: GET, Route: /]
-in SYSTEMPATH/Exceptions/FrameworkException.php on line 39.
- 1 SYSTEMPATH/View/View.php(228): CodeIgniter\Exceptions\FrameworkException::forInvalidFile()
- 2 SYSTEMPATH/Common.php(1250): CodeIgniter\View\View->render()
- 3 APPPATH/Controllers/Home.php(9): view()
- 4 SYSTEMPATH/CodeIgniter.php(951): App\Controllers\Home->index()
- 5 SYSTEMPATH/CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController()
- 6 SYSTEMPATH/CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest()
- 7 SYSTEMPATH/Boot.php(417): CodeIgniter\CodeIgniter->run()
- 8 SYSTEMPATH/Boot.php(68): CodeIgniter\Boot::runCodeIgniter()
- 9 FCPATH/index.php(59): CodeIgniter\Boot::bootWeb()
-10 SYSTEMPATH/rewrite.php(44): require_once('/opt/lampp/htdocs/WEB_DIR/S4/Examen/YAS/public/index.php')
-CRITICAL - 2026-07-20 06:42:11 --> CodeIgniter\View\Exceptions\ViewException: Invalid file: "index.php"
-[Method: GET, Route: /]
-in SYSTEMPATH/Exceptions/FrameworkException.php on line 39.
- 1 SYSTEMPATH/View/View.php(228): CodeIgniter\Exceptions\FrameworkException::forInvalidFile()
- 2 SYSTEMPATH/Common.php(1250): CodeIgniter\View\View->render()
- 3 APPPATH/Controllers/Home.php(9): view()
- 4 SYSTEMPATH/CodeIgniter.php(951): App\Controllers\Home->index()
- 5 SYSTEMPATH/CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController()
- 6 SYSTEMPATH/CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest()
- 7 SYSTEMPATH/Boot.php(417): CodeIgniter\CodeIgniter->run()
- 8 SYSTEMPATH/Boot.php(68): CodeIgniter\Boot::runCodeIgniter()
- 9 FCPATH/index.php(59): CodeIgniter\Boot::bootWeb()
-10 SYSTEMPATH/rewrite.php(44): require_once('/opt/lampp/htdocs/WEB_DIR/S4/Examen/YAS/public/index.php')
-CRITICAL - 2026-07-20 06:42:11 --> CodeIgniter\View\Exceptions\ViewException: Invalid file: "index.php"
-[Method: GET, Route: /]
-in SYSTEMPATH/Exceptions/FrameworkException.php on line 39.
- 1 SYSTEMPATH/View/View.php(228): CodeIgniter\Exceptions\FrameworkException::forInvalidFile()
- 2 SYSTEMPATH/Common.php(1250): CodeIgniter\View\View->render()
- 3 APPPATH/Controllers/Home.php(9): view()
- 4 SYSTEMPATH/CodeIgniter.php(951): App\Controllers\Home->index()
- 5 SYSTEMPATH/CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController()
- 6 SYSTEMPATH/CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest()
- 7 SYSTEMPATH/Boot.php(417): CodeIgniter\CodeIgniter->run()
- 8 SYSTEMPATH/Boot.php(68): CodeIgniter\Boot::runCodeIgniter()
- 9 FCPATH/index.php(59): CodeIgniter\Boot::bootWeb()
-10 SYSTEMPATH/rewrite.php(44): require_once('/opt/lampp/htdocs/WEB_DIR/S4/Examen/YAS/public/index.php')
-CRITICAL - 2026-07-20 06:42:11 --> CodeIgniter\View\Exceptions\ViewException: Invalid file: "index.php"
-[Method: GET, Route: /]
-in SYSTEMPATH/Exceptions/FrameworkException.php on line 39.
- 1 SYSTEMPATH/View/View.php(228): CodeIgniter\Exceptions\FrameworkException::forInvalidFile()
- 2 SYSTEMPATH/Common.php(1250): CodeIgniter\View\View->render()
- 3 APPPATH/Controllers/Home.php(9): view()
- 4 SYSTEMPATH/CodeIgniter.php(951): App\Controllers\Home->index()
- 5 SYSTEMPATH/CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController()
- 6 SYSTEMPATH/CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest()
- 7 SYSTEMPATH/Boot.php(417): CodeIgniter\CodeIgniter->run()
- 8 SYSTEMPATH/Boot.php(68): CodeIgniter\Boot::runCodeIgniter()
- 9 FCPATH/index.php(59): CodeIgniter\Boot::bootWeb()
-10 SYSTEMPATH/rewrite.php(44): require_once('/opt/lampp/htdocs/WEB_DIR/S4/Examen/YAS/public/index.php')
-CRITICAL - 2026-07-20 06:42:14 --> CodeIgniter\View\Exceptions\ViewException: Invalid file: "index.php"
-[Method: GET, Route: /]
-in SYSTEMPATH/Exceptions/FrameworkException.php on line 39.
- 1 SYSTEMPATH/View/View.php(228): CodeIgniter\Exceptions\FrameworkException::forInvalidFile()
- 2 SYSTEMPATH/Common.php(1250): CodeIgniter\View\View->render()
- 3 APPPATH/Controllers/Home.php(9): view()
- 4 SYSTEMPATH/CodeIgniter.php(951): App\Controllers\Home->index()
- 5 SYSTEMPATH/CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController()
- 6 SYSTEMPATH/CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest()
- 7 SYSTEMPATH/Boot.php(417): CodeIgniter\CodeIgniter->run()
- 8 SYSTEMPATH/Boot.php(68): CodeIgniter\Boot::runCodeIgniter()
- 9 FCPATH/index.php(59): CodeIgniter\Boot::bootWeb()
-10 SYSTEMPATH/rewrite.php(44): require_once('/opt/lampp/htdocs/WEB_DIR/S4/Examen/YAS/public/index.php')
-CRITICAL - 2026-07-20 06:42:15 --> CodeIgniter\View\Exceptions\ViewException: Invalid file: "index.php"
-[Method: GET, Route: /]
-in SYSTEMPATH/Exceptions/FrameworkException.php on line 39.
- 1 SYSTEMPATH/View/View.php(228): CodeIgniter\Exceptions\FrameworkException::forInvalidFile()
- 2 SYSTEMPATH/Common.php(1250): CodeIgniter\View\View->render()
- 3 APPPATH/Controllers/Home.php(9): view()
- 4 SYSTEMPATH/CodeIgniter.php(951): App\Controllers\Home->index()
- 5 SYSTEMPATH/CodeIgniter.php(497): CodeIgniter\CodeIgniter->runController()
- 6 SYSTEMPATH/CodeIgniter.php(340): CodeIgniter\CodeIgniter->handleRequest()
- 7 SYSTEMPATH/Boot.php(417): CodeIgniter\CodeIgniter->run()
- 8 SYSTEMPATH/Boot.php(68): CodeIgniter\Boot::runCodeIgniter()
- 9 FCPATH/index.php(59): CodeIgniter\Boot::bootWeb()
-10 SYSTEMPATH/rewrite.php(44): require_once('/opt/lampp/htdocs/WEB_DIR/S4/Examen/YAS/public/index.php')
+ERROR - 2026-07-20 07:33:00 --> NOT NULL constraint failed: operation.montant_frais
+in SYSTEMPATH/Database/SQLite3/Connection.php on line 163.
+ 1 SYSTEMPATH/Database/SQLite3/Connection.php(163): SQLite3->exec()
+ 2 SYSTEMPATH/Database/BaseConnection.php(910): CodeIgniter\Database\SQLite3\Connection->execute()
+ 3 SYSTEMPATH/Database/BaseConnection.php(827): CodeIgniter\Database\BaseConnection->simpleQuery()
+ 4 SYSTEMPATH/Database/BaseBuilder.php(1841): CodeIgniter\Database\BaseConnection->query()
+ 5 SYSTEMPATH/Database/BaseBuilder.php(2230): CodeIgniter\Database\BaseBuilder->batchExecute()
+ 6 APPPATH/Database/Seeds/Datainit.php(55): CodeIgniter\Database\BaseBuilder->insertBatch()
+ 7 SYSTEMPATH/Database/Seeder.php(155): App\Database\Seeds\Datainit->run()
+ 8 SYSTEMPATH/Commands/Database/Seed.php(79): CodeIgniter\Database\Seeder->call()
+ 9 SYSTEMPATH/CLI/Commands.php(74): CodeIgniter\Commands\Database\Seed->run()
+10 SYSTEMPATH/CLI/Console.php(47): CodeIgniter\CLI\Commands->run()
+11 SYSTEMPATH/Boot.php(442): CodeIgniter\CLI\Console->run()
+12 SYSTEMPATH/Boot.php(166): CodeIgniter\Boot::runCommand()
+13 ROOTPATH/spark(87): CodeIgniter\Boot::bootSpark()
+ERROR - 2026-07-20 07:38:37 --> UNIQUE constraint failed: operateur.code_operateur
+in SYSTEMPATH/Database/SQLite3/Connection.php on line 163.
+ 1 SYSTEMPATH/Database/SQLite3/Connection.php(163): SQLite3->exec()
+ 2 SYSTEMPATH/Database/BaseConnection.php(910): CodeIgniter\Database\SQLite3\Connection->execute()
+ 3 SYSTEMPATH/Database/BaseConnection.php(827): CodeIgniter\Database\BaseConnection->simpleQuery()
+ 4 SYSTEMPATH/Database/BaseBuilder.php(1841): CodeIgniter\Database\BaseConnection->query()
+ 5 SYSTEMPATH/Database/BaseBuilder.php(2230): CodeIgniter\Database\BaseBuilder->batchExecute()
+ 6 APPPATH/Database/Seeds/Datainit.php(14): CodeIgniter\Database\BaseBuilder->insertBatch()
+ 7 SYSTEMPATH/Database/Seeder.php(155): App\Database\Seeds\Datainit->run()
+ 8 SYSTEMPATH/Commands/Database/Seed.php(79): CodeIgniter\Database\Seeder->call()
+ 9 SYSTEMPATH/CLI/Commands.php(74): CodeIgniter\Commands\Database\Seed->run()
+10 SYSTEMPATH/CLI/Console.php(47): CodeIgniter\CLI\Commands->run()
+11 SYSTEMPATH/Boot.php(442): CodeIgniter\CLI\Console->run()
+12 SYSTEMPATH/Boot.php(166): CodeIgniter\Boot::runCommand()
+13 ROOTPATH/spark(87): CodeIgniter\Boot::bootSpark()
