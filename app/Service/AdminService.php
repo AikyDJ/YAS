@@ -25,6 +25,21 @@ class AdminService
         }
     }
 
+    private function columnExists($db, string $table, string $column): bool
+    {
+        if (!$this->tableExists($db, $table)) {
+            return false;
+        }
+
+        foreach ($db->query('PRAGMA table_info(' . $db->escapeIdentifiers($table) . ')')->getResultArray() as $field) {
+            if (($field['name'] ?? '') === $column) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private function normalizePrefix(array $row): array
     {
         return [
@@ -87,69 +102,6 @@ class AdminService
     }
 
 
-    public function getSituationGain(): array
-    {
-        $db = $this->db();
-
-        if (!$this->tableExists($db, 'operation') || !$this->tableExists($db, 'client') || !$this->tableExists($db, 'type_operation')) {
-            return [
-                'gains_internes' => 0.0,
-                'gains_externes' => 0.0,
-                'total_gains'    => 0.0,
-                'par_client'     => [],
-            ];
-        }
-
-        try {
-            $gainsInternesQuery = $db->table('operation o')
-                ->select('SUM(o.montant_frais) AS total')
-                ->join('type_operation t', 't.id = o.id_type_operation')
-                ->join('client pc', 'pc.id = o.id_primary_client')
-                ->leftJoin('client sc', 'sc.id = o.id_secondary_client')
-                ->groupStart()
-                ->where('LOWER(t.nom) !=', 'transfaire')
-                ->orGroupStart()
-                ->where('LOWER(t.nom)', 'transfaire')
-                ->where('pc.id_operateur = sc.id_operateur', null, false)
-                ->groupEnd()
-                ->groupEnd()
-                ->get()->getRowArray();
-
-            $gainsInternes = (float) ($gainsInternesQuery['total'] ?? 0);
-            $gainsExternesQuery = $db->table('operation o')
-                ->select('SUM(o.montant_frais) AS total')
-                ->join('type_operation t', 't.id = o.id_type_operation')
-                ->join('client pc', 'pc.id = o.id_primary_client')
-                ->join('client sc', 'sc.id = o.id_secondary_client')
-                ->where('LOWER(t.nom)', 'transfaire')
-                ->where('pc.id_operateur != sc.id_operateur', null, false)
-                ->get()->getRowArray();
-            $gainsExternes = (float) ($gainsExternesQuery['total'] ?? 0);
-            $parClient = $db->table('operation o')
-                ->select('c.nom, c.prenom, o.id_type_operation, t.nom AS type_op, SUM(o.montant_frais) AS total_frais, COUNT(o.id) AS nb_operations')
-                ->join('client c', 'c.id = o.id_primary_client')
-                ->join('type_operation t', 't.id = o.id_type_operation')
-                ->groupBy('c.id, c.nom, c.prenom, o.id_type_operation, t.nom')
-                ->get()->getResultArray();
-            $totalGains = $gainsInternes + $gainsExternes;
-        } catch (Throwable $exception) {
-            return [
-                'gains_internes' => 0.0,
-                'gains_externes' => 0.0,
-                'total_gains'    => 0.0,
-                'par_client'     => [],
-            ];
-        }
-
-        return [
-            'gains_internes' => $gainsInternes,
-            'gains_externes' => $gainsExternes,
-            'total_gains'    => $totalGains,
-            'par_client'     => $parClient,
-        ];
-    }
-
-
     public function getMontantsAEnvoyerParOperateur(): array
     {
         $db = $this->db();
@@ -185,9 +137,9 @@ class AdminService
             'nb_operations'          => $this->tableExists($db, 'operation') ? (int) $db->table('operation')->countAllResults() : 0,
             'gains_retrait'          => $this->getGainsByType('retrait'),
             'gains_transfert'        => $this->getGainsByType('transfaire'),
-            'gains_internes'         => $situationGain['gains_internes'],
-            'gains_externes'         => $situationGain['gains_externes'],
-            'total_gains'            => $situationGain['total_gains'],
+            'gains_internes'         => (float) ($situationGain['gains_internes'] ?? $situationGain['gains_operateur'] ?? 0),
+            'gains_externes'         => (float) ($situationGain['gains_externes'] ?? $situationGain['gains_autres_ops'] ?? 0),
+            'total_gains'            => (float) ($situationGain['total_gains'] ?? 0),
             'montants_par_operateur' => $this->getMontantsAEnvoyerParOperateur(),
             'comptes'                => $this->getComptes(),
         ];
@@ -202,6 +154,19 @@ class AdminService
         }
 
         try {
+            if ($this->tableExists($db, 'prefix_operateur')) {
+                $rows = $db->table('prefix_operateur po')
+                    ->select('po.id, o.nom, po.prefix')
+                    ->join('operateur o', 'o.id = po.id_operateur')
+                    ->orderBy('po.prefix', 'ASC')
+                    ->get()->getResultArray();
+
+                return array_map([$this, 'normalizePrefix'], $rows);
+            }
+
+            if (!$this->columnExists($db, 'operateur', 'code_operateur')) {
+                return [];
+            }
             $rows = $db->table('operateur')
                 ->select('id, nom, code_operateur')
                 ->orderBy('code_operateur', 'ASC')
@@ -239,11 +204,11 @@ class AdminService
         }
 
         try {
-            $rows = $db->table('frais_barem f')
-                ->select('f.*, t.nom AS type_operation')
-                ->join('type_operation t', 't.id = f.id_type_operation', 'left')
-                ->orderBy('f.min_montant', 'ASC')
-                ->get()->getResultArray();
+            $builder = $db->table('frais_barem f')->select('f.*')->orderBy('f.min_montant', 'ASC');
+            if ($this->columnExists($db, 'frais_barem', 'id_type_operation')) {
+                $builder->select('t.nom AS type_operation')->join('type_operation t', 't.id = f.id_type_operation', 'left');
+            }
+            $rows = $builder->get()->getResultArray();
 
             return array_map([$this, 'normalizeBareme'], $rows);
         } catch (Throwable $exception) {
@@ -260,10 +225,11 @@ class AdminService
         }
 
         try {
-            $bareme = $db->table('frais_barem f')
-                ->select('f.*, t.nom AS type_operation')
-                ->join('type_operation t', 't.id = f.id_type_operation', 'left')
-                ->where('f.id', $id)->get()->getRowArray();
+            $builder = $db->table('frais_barem f')->select('f.*')->where('f.id', $id);
+            if ($this->columnExists($db, 'frais_barem', 'id_type_operation')) {
+                $builder->select('t.nom AS type_operation')->join('type_operation t', 't.id = f.id_type_operation', 'left');
+            }
+            $bareme = $builder->get()->getRowArray();
 
             return $bareme ? $this->normalizeBareme($bareme) : null;
         } catch (Throwable $exception) {
@@ -307,7 +273,10 @@ class AdminService
         } elseif (!preg_match('/^\d{2,3}$/', $prefix)) {
             $message = 'Préfixe invalide.';
         } else {
-            $exists = $db->table('operateur')->where('code_operateur', (int) $prefix)->countAllResults();
+            $hasPrefixTable = $this->tableExists($db, 'prefix_operateur');
+            $exists = $hasPrefixTable
+                ? $db->table('prefix_operateur')->where('prefix', $prefix)->countAllResults()
+                : ($this->columnExists($db, 'operateur', 'code_operateur') ? $db->table('operateur')->where('code_operateur', (int) $prefix)->countAllResults() : 0);
 
             if ($exists > 0) {
                 $message = 'Préfixe existant';
@@ -315,10 +284,17 @@ class AdminService
                 $nomOp = $nom !== '' ? $nom : 'Préfixe ' . $prefix;
 
                 try {
-                    $db->table('operateur')->insert([
-                        'nom' => $nomOp,
-                        'code_operateur' => (int) $prefix,
-                    ]);
+                    $operator = ['nom' => $nomOp];
+                    if ($this->columnExists($db, 'operateur', 'code_operateur')) {
+                        $operator['code_operateur'] = (int) $prefix;
+                    }
+                    if ($this->columnExists($db, 'operateur', 'comission_ptc')) {
+                        $operator['comission_ptc'] = 0;
+                    }
+                    $db->table('operateur')->insert($operator);
+                    if ($hasPrefixTable) {
+                        $db->table('prefix_operateur')->insert(['prefix' => $prefix, 'id_operateur' => $db->insertID()]);
+                    }
                     $success = true;
                 } catch (Throwable $exception) {
                     $message = 'Impossible d\'ajouter le préfixe.';
@@ -338,12 +314,15 @@ class AdminService
         }
 
         try {
-            $db->table('frais_barem')->insert([
-                'id_type_operation' => $data['id_type_operation'] ?? null,
+            $values = [
                 'montant'     => $data['montant'] ?? 0,
                 'min_montant' => $data['min_montant'] ?? 0,
                 'max_montant' => $data['max_montant'] ?? 0,
-            ]);
+            ];
+            if ($this->columnExists($db, 'frais_barem', 'id_type_operation')) {
+                $values['id_type_operation'] = $data['id_type_operation'] ?? null;
+            }
+            $db->table('frais_barem')->insert($values);
         } catch (Throwable $exception) {
             return ['success' => false, 'message' => 'Impossible d\'enregistrer le barème.'];
         }
@@ -392,14 +371,18 @@ class AdminService
         if (!$this->tableExists($db, 'frais_barem') || !$this->tableExists($db, 'type_operation')) {
             return ['success' => false, 'message' => 'Base de données non initialisée.'];
         }
-        if ($typeId === false || $montant === false || $min === false || $max === false || $montant < 0 || $min < 0 || $max < $min) {
+        $hasTypeColumn = $this->columnExists($db, 'frais_barem', 'id_type_operation');
+        if (($hasTypeColumn && $typeId === false) || $montant === false || $min === false || $max === false || $montant < 0 || $min < 0 || $max < $min) {
             return ['success' => false, 'message' => 'Les valeurs du barème sont invalides.'];
         }
-        if ($db->table('type_operation')->where('id', $typeId)->countAllResults() === 0) {
+        if ($hasTypeColumn && $db->table('type_operation')->where('id', $typeId)->countAllResults() === 0) {
             return ['success' => false, 'message' => 'Type d\'opération introuvable.'];
         }
 
-        $values = ['id_type_operation' => $typeId, 'montant' => $montant, 'min_montant' => $min, 'max_montant' => $max];
+        $values = ['montant' => $montant, 'min_montant' => $min, 'max_montant' => $max];
+        if ($hasTypeColumn) {
+            $values['id_type_operation'] = $typeId;
+        }
         try {
             if ($id !== false && $id !== null) {
                 $db->table('frais_barem')->where('id', $id)->update($values);
@@ -451,15 +434,78 @@ class AdminService
     {
         $db = $this->db();
         if ($id < 1 || !$this->tableExists($db, 'operateur') || $pourcentage < 0) {
-            return ['success' => false, 'message' => 'Données ou pourcentage invalides.'];
+            return ['success' => false, 'message' => 'Error'];
         }
         try {
             $db->table('operateur')
                 ->where('id', $id)
                 ->update(['comission_ptc' => $pourcentage]);
-            return ['success' => true, 'message' => 'Commission mise à jour avec succès.'];
+            return ['success' => true, 'message' => 'Mise à jour.'];
         } catch (Throwable $exception) {
-            return ['success' => false, 'message' => 'Impossible de sauvegarder la commission.'];
+            return ['success' => false, 'message' => 'Erreur de Mise à jour .'];
+        }
+    }
+    public function getSituationGain(): array
+    {
+        $db = $this->db();
+
+        if (!$this->tableExists($db, 'operation') || !$this->tableExists($db, 'client') || !$this->tableExists($db, 'type_operation')) {
+            return [
+                'gains_operateur'    => 0.0,
+                'gains_autres_ops'   => 0.0,
+                'total_gains'        => 0.0,
+                'details_frais'      => 0.0,
+                'details_commission' => 0.0,
+            ];
+        }
+        try {
+            $opQuery = $db->table('operation o')
+                ->select('SUM(o.montant_frais) AS total_frais')
+                ->join('type_operation t', 't.id = o.id_type_operation')
+                ->join('client pc', 'pc.id = o.id_primary_client')
+                ->leftJoin('client sc', 'sc.id = o.id_secondary_client')
+                ->groupStart()
+                ->where('LOWER(t.nom) !=', 'transfaire')
+                ->orGroupStart()
+                ->where('LOWER(t.nom)', 'transfaire')
+                ->where('pc.id_operateur = sc.id_operateur', null, false)
+                ->groupEnd()
+                ->groupEnd()
+                ->get()->getRowArray();
+
+            $gainsOperateur = (float) ($opQuery['total_frais'] ?? 0);
+
+            $autresQuery = $db->table('operation o')
+                ->select('SUM(o.montant_frais) AS total_frais, SUM(o.montant_comission) AS total_commission')
+                ->join('type_operation t', 't.id = o.id_type_operation')
+                ->join('client pc', 'pc.id = o.id_primary_client')
+                ->join('client sc', 'sc.id = o.id_secondary_client')
+                ->where('LOWER(t.nom)', 'transfaire')
+                ->where('pc.id_operateur != sc.id_operateur', null, false)
+                ->get()->getRowArray();
+
+            $fraisExternes = (float) ($autresQuery['total_frais'] ?? 0);
+            $commissionExternes = (float) ($autresQuery['total_commission'] ?? 0);
+
+            $gainsAutresOps = $fraisExternes + $commissionExternes;
+            $totalGains = $gainsOperateur + $gainsAutresOps;
+
+            return [
+                'gains_operateur'    => $gainsOperateur,
+                'gains_autres_ops'   => $gainsAutresOps,
+                'total_gains'        => $totalGains,
+                'details_frais'      => $gainsOperateur + $fraisExternes,
+                'details_commission' => $commissionExternes
+            ];
+
+        } catch (Throwable $exception) {
+            return [
+                'gains_operateur'    => 0.0,
+                'gains_autres_ops'   => 0.0,
+                'total_gains'        => 0.0,
+                'details_frais'      => 0.0,
+                'details_commission' => 0.0,
+            ];
         }
     }
 }
