@@ -22,9 +22,9 @@ class Datainit extends Seeder
         // id_operateur : 1 = Orange Money, 2 = Mvola, 3 = Airtel Money
         // ---------------------------------------------------------
         $this->db->table('prefix_operateur')->insertBatch([
-            ['prefix' => '033', 'id_operateur' => 1],
-            ['prefix' => '034', 'id_operateur' => 2],
-            ['prefix' => '032', 'id_operateur' => 3],
+            ['prefix' => '33', 'id_operateur' => 1],
+            ['prefix' => '34', 'id_operateur' => 2],
+            ['prefix' => '32', 'id_operateur' => 3],
         ]);
 
         // ---------------------------------------------------------
