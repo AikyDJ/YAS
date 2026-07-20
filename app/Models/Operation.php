@@ -12,7 +12,7 @@ class Operation extends Model
     protected $returnType       = 'array';
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
-    protected $allowedFields    = ['id_primary_client', 'id_secondary_client', 'id_type_operation', 'montant', 'montant_frais', 'date_operation'];
+    protected $allowedFields    = ['id_primary_client', 'id_secondary_client', 'id_type_operation', 'montant', 'montant_frais', 'montant_comission', 'date_operation'];
 
     protected bool $allowEmptyInserts = false;
     protected bool $updateOnlyChanged = true;
