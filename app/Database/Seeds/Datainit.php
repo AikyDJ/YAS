@@ -12,9 +12,9 @@ class Datainit extends Seeder
         // Opérateurs (sans code_operateur — c'est dans prefix_operateur)
         // ---------------------------------------------------------
         $this->db->table('operateur')->insertBatch([
-            ['nom' => 'Orange Money'],
-            ['nom' => 'Mvola'],
-            ['nom' => 'Airtel Money'],
+            ['nom' => 'Orange Money', 'comission_ptc' => 0.05],
+            ['nom' => 'Mvola', 'comission_ptc' => 0.03],
+            ['nom' => 'Airtel Money', 'comission_ptc' => 0.04],
         ]);
 
         // ---------------------------------------------------------
@@ -73,6 +73,7 @@ class Datainit extends Seeder
                 'id_type_operation' => 1,
                 'montant' => 50000,
                 'montant_frais' => 400,
+                'montant_comission' => 2500,
                 'date_operation' => '2026-01-05',
             ],
             [
@@ -81,6 +82,7 @@ class Datainit extends Seeder
                 'id_type_operation' => 2,
                 'montant' => 10000,
                 'montant_frais' => 100,
+                'montant_comission' => 400,
                 'date_operation' => '2026-01-10',
             ],
             [
@@ -89,6 +91,7 @@ class Datainit extends Seeder
                 'id_type_operation' => 3,
                 'montant' => 15000,
                 'montant_frais' => 400,
+                'montant_comission' => 600,
                 'date_operation' => '2026-01-15',
             ],
             [
@@ -97,6 +100,7 @@ class Datainit extends Seeder
                 'id_type_operation' => 1,
                 'montant' => 20000,
                 'montant_frais' => 200,
+                'montant_comission' => 1000,
                 'date_operation' => '2026-02-01',
             ],
             [
@@ -105,6 +109,7 @@ class Datainit extends Seeder
                 'id_type_operation' => 3,
                 'montant' => 5000,
                 'montant_frais' => 50,
+                'montant_comission' => 150,
                 'date_operation' => '2026-02-10',
             ],
             [
@@ -113,6 +118,7 @@ class Datainit extends Seeder
                 'id_type_operation' => 2,
                 'montant' => 3000,
                 'montant_frais' => 50,
+                'montant_comission' => 90,
                 'date_operation' => '2026-02-20',
             ],
         ]);
