@@ -15,6 +15,7 @@ $routes->get('/logout', 'Home::logout');
 $routes->get('/client/dashboard', 'Client::dashboard');
 $routes->post('/client/proceder-operation', 'Client::procederOperation');
 $routes->post('/client/proceder-transfert', 'Client::procederTransfert');
+$routes->get('/client/frais-tranche/(:num)', 'Client::getFraisTranche/$1');
 $routes->get('/client/logout', 'Client::logout');
 
 // Admin
