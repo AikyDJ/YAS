@@ -57,11 +57,7 @@ class ClientService
     // get client operateur by id
     public function getClientOperateurById(int $id): ?array
     {
-        return $this->clientModel
-            ->select('client.*, operateur.code_operateur')
-            ->join('operateur', 'operateur.id = client.id_operateur')
-            ->where('client.id', $id)
-            ->first();
+        return $this->clientOperateurModel->where('id_client', $id)->first();
     }
     /**
      * Récupère le solde actuel d'un client via la vue v_solde_client.

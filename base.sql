@@ -33,9 +33,11 @@ CREATE TABLE IF NOT EXISTS client(
 
 CREATE TABLE IF NOT EXISTS frais_barem(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_type_operation INTEGER NOT NULL,
     montant REAL NOT NULL,
     min_montant REAL NOT NULL,
-    max_montant REAL NOT NULL
+    max_montant REAL NOT NULL,
+    FOREIGN KEY (id_type_operation) REFERENCES type_operation(id)
 );
 
 CREATE TABLE IF NOT EXISTS type_operation(

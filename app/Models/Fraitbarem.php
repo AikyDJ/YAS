@@ -12,7 +12,7 @@ class Fraitbarem extends Model
     protected $returnType       = 'array';
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
-    protected $allowedFields    = ['montant', 'min_montant', 'max_montant'];
+    protected $allowedFields    = ['id_type_operation', 'montant', 'min_montant', 'max_montant'];
 
     protected bool $allowEmptyInserts = false;
     protected bool $updateOnlyChanged = true;
