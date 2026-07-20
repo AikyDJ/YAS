@@ -36,7 +36,7 @@ class Admin extends BaseController
     {
         $result = $this->adminService->addNewPrefix([
             'nom'            => $this->request->getPost('nom'),
-            'code_operateur' => $this->request->getPost('prefixe'),
+            'prefix'         => $this->request->getPost('prefixe'),
         ]);
 
         $type = $result['success'] ? 'success' : 'error';
@@ -45,12 +45,8 @@ class Admin extends BaseController
 
     public function supprimerPrefixe()
     {
-        $id = $this->request->getPost('id');
-        $db = \Config\Database::connect();
-
-        $db->table('operateur')->where('id', $id)->delete();
-
-        return redirect()->to('/admin/prefixes')->with('success', 'Préfixe supprimé.');
+        $result = $this->adminService->deletePrefix((int) $this->request->getPost('id'));
+        return redirect()->to('/admin/prefixes')->with($result['success'] ? 'success' : 'error', $result['message']);
     }
 
     public function baremes(): string
@@ -84,6 +80,7 @@ class Admin extends BaseController
         $data = [
             'bareme'  => $bareme,
             'baremes' => $this->adminService->getBaremes(),
+            'types'   => $this->adminService->getTypeOperations(),
         ];
 
         return view('admin/baremes', $data);
@@ -92,10 +89,11 @@ class Admin extends BaseController
     public function supprimerBareme()
     {
         $id = $this->request->getPost('id');
-        $db = \Config\Database::connect();
-
-        $db->table('frais_barem')->where('id', $id)->delete();
-
+        $bareme = $this->adminService->getBaremeById($id);
+        if ($bareme === null) {
+            return redirect()->to('/admin/baremes')->with('error', 'Barème introuvable.');
+        }
+        \Config\Database::connect()->table('frais_barem')->where('id', $bareme['id'])->delete();
         return redirect()->to('/admin/baremes')->with('success', 'Barème supprimé.');
     }
 

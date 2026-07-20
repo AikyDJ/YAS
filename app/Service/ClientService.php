@@ -55,8 +55,10 @@ class ClientService
     // get client operateur by id
     public function getClientOperateurById(int $id): ?array
     {
-        return $this->clientOperateurModel
-            ->where('id_client', $id)
+        return $this->clientModel
+            ->select('client.*, operateur.code_operateur')
+            ->join('operateur', 'operateur.id = client.id_operateur')
+            ->where('client.id', $id)
             ->first();
     }
     /**
@@ -64,11 +66,24 @@ class ClientService
      */
     public function getSolde(int $id_client): float
     {
-        $row = $this->soldeClientModel
-            ->where('id_client', $id_client)
-            ->first();
+        $db = $this->clientModel->db();
+        $row = $db->query(
+            "SELECT COALESCE(SUM(CASE
+                WHEN LOWER(t.nom) = 'depot' THEN o.montant
+                WHEN LOWER(t.nom) IN ('retrait', 'transfaire') THEN -o.montant - o.montant_frais
+                ELSE 0 END), 0) AS solde
+             FROM operation o JOIN type_operation t ON t.id = o.id_type_operation
+             WHERE o.id_primary_client = ?",
+            [$id_client]
+        )->getRowArray();
+        $received = $db->query(
+            "SELECT COALESCE(SUM(o.montant), 0) AS solde
+             FROM operation o JOIN type_operation t ON t.id = o.id_type_operation
+             WHERE o.id_secondary_client = ? AND LOWER(t.nom) = 'transfaire'",
+            [$id_client]
+        )->getRowArray();
 
-        return $row ? (float) $row['solde_actuel'] : 0.0;
+        return (float) ($row['solde'] ?? 0) + (float) ($received['solde'] ?? 0);
     }
 
     /**
@@ -77,9 +92,11 @@ class ClientService
      */
     public function getOperations(int $id_client): array
     {
-        $rows = $this->operationClientModel
-            ->where('id_client_primaire', $id_client)
-            ->orderBy('date_operation', 'DESC')
+        $rows = $this->operationModel
+            ->select('operation.id, operation.date_operation, operation.montant, type_operation.nom AS type_operation')
+            ->join('type_operation', 'type_operation.id = operation.id_type_operation')
+            ->where('operation.id_primary_client', $id_client)
+            ->orderBy('operation.date_operation', 'DESC')
             ->findAll();
 
         $operations = [];
@@ -100,13 +117,7 @@ class ClientService
      */
     private function getSoldeAtDate(int $id_client, string $date): float
     {
-        $row = $this->soldeHistoriqueModel
-            ->where('id_client', $id_client)
-            ->where('date_operation', $date)
-            ->orderBy('id_operation', 'DESC')
-            ->first();
-
-        return $row ? (float) $row['solde_cumule'] : 0.0;
+        return $this->getSolde($id_client);
     }
 
     /**
@@ -193,29 +204,33 @@ class ClientService
         try {
 
 
-            if (!$this->verifyCodeSecret($id_emetteur, $code_secret)) {
-                $result = ['success' => false, 'message' => 'Code secret incorrect.'];
+            if ($montant <= 0 || !$this->verifyCodeSecret($id_emetteur, $code_secret)) {
+                return ['success' => false, 'message' => 'Montant ou code secret incorrect.'];
             }
 
+            $code_destinataire = preg_replace('/\D/', '', $code_destinataire);
+            if (strlen($code_destinataire) === 10 && $code_destinataire[0] === '0') {
+                $code_destinataire = substr($code_destinataire, 3);
+            }
             $destinataire = $this->getClientDetails($code_destinataire);
             if (!$destinataire) {
-                $result = ['success' => false, 'message' => 'Destinataire introuvable.'];
+                return ['success' => false, 'message' => 'Destinataire introuvable.'];
             }
 
             if ((int) $destinataire['id'] === $id_emetteur) {
-                $result = ['success' => false, 'message' => 'Vous ne pouvez pas vous transférer à vous-même.'];
+                return ['success' => false, 'message' => 'Vous ne pouvez pas vous transférer à vous-même.'];
             }
 
             $type_id = $this->getTypeOperationId('transfaire');
             if ($type_id === null) {
-                $result = ['success' => false, 'message' => 'Type d\'opération inconnu.'];
+                return ['success' => false, 'message' => 'Type d\'opération inconnu.'];
             }
 
             $solde = $this->getSolde($id_emetteur);
             $frais = $this->calculerFrais($montant);
 
             if (($montant + $frais) > $solde) {
-                $result = ['success' => false, 'message' => 'Solde insuffisant pour ce transfert.'];
+                return ['success' => false, 'message' => 'Solde insuffisant pour ce transfert.'];
             }
 
             $data = [

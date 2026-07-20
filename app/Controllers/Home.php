@@ -14,12 +14,19 @@ class Home extends BaseController
 
     public function index()
     {
+        if (session()->get('id_client')) {
+            return redirect()->to('/client/dashboard');
+        }
         return view('index');
     }
 
     public function auth(){
-            $telephone  = $this->request->getPost('telephone');
-            $codeSecret = $this->request->getPost('code_secret');
+            $telephone  = trim((string) $this->request->getPost('telephone'));
+            $codeSecret = trim((string) $this->request->getPost('code_secret'));
+
+            if ($telephone === '' || !preg_match('/^\d{4}$/', $codeSecret)) {
+                return redirect()->to('/')->with('error', 'Numéro ou code secret invalide.');
+            }
 
             $authResult = $this->authService->authenticate($telephone, $codeSecret);
 

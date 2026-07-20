@@ -1,6 +1,6 @@
 <?php
 namespace App\Service;
-use app\Models\Fraitbarem;
+use App\Models\Fraitbarem;
 
 class OperationService
 {
@@ -17,7 +17,7 @@ class OperationService
             ->get()
             ->getRowArray();
 
-        return $frais ? (float) $frais['frais'] : 0;
+        return $frais ? (float) $frais['montant'] : 0;
     }
 
     public function getAllFraisTranches()

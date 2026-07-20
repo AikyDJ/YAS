@@ -22,17 +22,14 @@
 
         <div class="grid-row grid-3">
             <div class="stat-card stat-blue">
-                <div class="stat-icon">&#128100;</div>
                 <div class="stat-value"><?= $total_comptes ?? 0 ?></div>
                 <div class="stat-label">Comptes Clients</div>
             </div>
             <div class="stat-card stat-purple">
-                <div class="stat-icon">&#128200;</div>
                 <div class="stat-value"><?= $nb_operations ?? 0 ?></div>
                 <div class="stat-label">Opérations</div>
             </div>
             <div class="stat-card stat-gold">
-                <div class="stat-icon">&#128176;</div>
                 <div class="stat-value"><?= number_format(($gains_retrait ?? 0) + ($gains_transfert ?? 0), 0, ',', ' ') ?></div>
                 <div class="stat-label">Gains Total (Ar)</div>
             </div>
