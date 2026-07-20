@@ -2,7 +2,8 @@
 
 - Aiky : 
   - Création des logiques derrières la base de données
-  - Travail sur services
+  - Travail sur services : 
+    - ClientServices { opération 
   
 
 - Toavina : 

@@ -2,26 +2,57 @@
 
 namespace App\Controllers;
 
+use App\Service\AdminService;
+
 class Admin extends BaseController
 {
+    private $adminService;
+
+    public function __construct()
+    {
+        $this->adminService = new AdminService();
+    }
+
     public function dashboard(): string
     {
+        $db = \Config\Database::connect();
+
+        $gains = $this->adminService->getSituationGain();
+
+        $totalComptes = $db->table('client')->countAllResults();
+        $nbOperations = $db->table('operation')->countAllResults();
+        $prefixes = $db->table('operateur')->get()->getResultArray();
+        $comptes = $db->table('v_solde_client')->get()->getResultArray();
+
         $data = [
-            'total_comptes'   => 42,
-            'prefixes'        => [],
-            'nb_operations'   => 156,
-            'gains_retrait'   => 45000,
-            'gains_transfert' => 128000,
-            'comptes'         => [],
+            'total_comptes'   => $totalComptes,
+            'prefixes'        => $prefixes,
+            'nb_operations'   => $nbOperations,
+            'gains_retrait'   => $this->getGainsByType($db, 'retrait'),
+            'gains_transfert' => $this->getGainsByType($db, 'transfaire'),
+            'comptes'         => $comptes,
         ];
 
         return view('admin/dashboard', $data);
     }
 
+    private function getGainsByType($db, $type): float
+    {
+        $result = $db->table('v_operation_client')
+            ->select('SUM(montant_frais) AS total')
+            ->where('type_operation', $type)
+            ->get()
+            ->getRowArray();
+
+        return $result['total'] ?? 0;
+    }
+
     public function prefixes(): string
     {
+        $db = \Config\Database::connect();
+
         $data = [
-            'prefixes' => [],
+            'prefixes' => $db->table('operateur')->get()->getResultArray(),
         ];
 
         return view('admin/prefixes', $data);
@@ -29,27 +60,32 @@ class Admin extends BaseController
 
     public function ajouterPrefixe()
     {
-        $prefixe = $this->request->getPost('prefixe');
+        $result = $this->adminService->addNewPrefix([
+            'nom'            => $this->request->getPost('nom'),
+            'code_operateur' => $this->request->getPost('prefixe'),
+        ]);
 
-        // TODO: validation + insertion en BDD
-
-        return redirect()->to('/admin/prefixes')->with('success', 'Préfixe ajouté.');
+        $type = $result['success'] ? 'success' : 'error';
+        return redirect()->to('/admin/prefixes')->with($type, $result['message']);
     }
 
     public function supprimerPrefixe()
     {
         $id = $this->request->getPost('id');
+        $db = \Config\Database::connect();
 
-        // TODO: suppression en BDD
+        $db->table('operateur')->where('id', $id)->delete();
 
         return redirect()->to('/admin/prefixes')->with('success', 'Préfixe supprimé.');
     }
 
     public function baremes(): string
     {
+        $db = \Config\Database::connect();
+
         $data = [
             'bareme'  => null,
-            'baremes' => [],
+            'baremes' => $db->table('frais_barem')->get()->getResultArray(),
         ];
 
         return view('admin/baremes', $data);
@@ -57,26 +93,32 @@ class Admin extends BaseController
 
     public function sauvegarderBareme()
     {
-        $id             = $this->request->getPost('id');
-        $typeOperation  = $this->request->getPost('type_operation');
-        $tranches       = $this->request->getPost('tranches');
+        $tranches = $this->request->getPost('tranches');
 
-        // TODO: validation + insert/update en BDD
+        if (!empty($tranches)) {
+            foreach ($tranches as $tranche) {
+                if (!empty($tranche['min']) && !empty($tranche['max']) && !empty($tranche['frais'])) {
+                    $this->adminService->createFraisTranche([
+                        'montant'     => $tranche['frais'],
+                        'min_montant' => $tranche['min'],
+                        'max_montant' => $tranche['max'],
+                    ]);
+                }
+            }
+        }
 
         return redirect()->to('/admin/baremes')->with('success', 'Barème enregistré.');
     }
 
     public function modifierBareme($id)
     {
-        $data = [
-            'bareme'  => ['id' => $id, 'type_operation' => 'retrait', 'tranches' => [
-                ['min_montant' => 0, 'max_montant' => 10000, 'frais' => 1.5],
-                ['min_montant' => 10001, 'max_montant' => 50000, 'frais' => 2.0],
-            ]],
-            'baremes' => [],
-        ];
+        $db = \Config\Database::connect();
+        $bareme = $db->table('frais_barem')->where('id', $id)->get()->getRowArray();
 
-        // TODO: charger le bareme depuis la BDD
+        $data = [
+            'bareme'  => $bareme,
+            'baremes' => $db->table('frais_barem')->get()->getResultArray(),
+        ];
 
         return view('admin/baremes', $data);
     }
@@ -84,16 +126,16 @@ class Admin extends BaseController
     public function supprimerBareme()
     {
         $id = $this->request->getPost('id');
+        $db = \Config\Database::connect();
 
-        // TODO: suppression en BDD
+        $db->table('frais_barem')->where('id', $id)->delete();
 
         return redirect()->to('/admin/baremes')->with('success', 'Barème supprimé.');
     }
 
     public function logout()
     {
-        // TODO: détruire la session
-
+        session()->destroy();
         return redirect()->to('/');
     }
 }
