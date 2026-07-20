@@ -11,14 +11,15 @@ PRAGMA foreign_keys = ON;
 CREATE TABLE IF NOT EXISTS operateur(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     nom TEXT NOT NULL,
-    code_operateur INTEGER NOT NULL UNIQUE -- 033, 032
+    code_operateur VARCHAR(3) NOT NULL UNIQUE -- 033, 032
 );
 
 CREATE TABLE IF NOT EXISTS client(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     nom TEXT NOT NULL,
     prenom TEXT NOT NULL,
-    code_client INTEGER NOT NULL UNIQUE,
+    code_client VARCHAR(10) NOT NULL UNIQUE,
+    code_secret VARCHAR(4) NOT NULL,
     id_operateur INTEGER NOT NULL,
     FOREIGN KEY (id_operateur) REFERENCES operateur(id)
 );
@@ -42,6 +43,7 @@ CREATE TABLE IF NOT EXISTS operation(
     id_secondary_client INTEGER,
     id_type_operation INTEGER NOT NULL,
     montant REAL NOT NULL,
+    montant_frais REAL NOT NULL,
     date_operation TEXT NOT NULL,
     FOREIGN KEY (id_primary_client) REFERENCES client(id),
     FOREIGN KEY (id_secondary_client) REFERENCES client(id),
@@ -60,7 +62,7 @@ WITH mouvements AS (
         o.id_primary_client AS id_client,
         CASE 
             WHEN LOWER(t.nom) = 'depot' THEN o.montant
-            WHEN LOWER(t.nom) IN ('retrait', 'transaction') THEN -o.montant
+            WHEN LOWER(t.nom) IN ('retrait', 'transfaire') THEN -o.montant -o.montant_frais
             ELSE 0
         END AS mouvement
     FROM operation o
@@ -73,7 +75,7 @@ WITH mouvements AS (
         o.montant AS mouvement
     FROM operation o
     JOIN type_operation t ON t.id = o.id_type_operation
-    WHERE LOWER(t.nom) = 'transaction'
+    WHERE LOWER(t.nom) = 'transfaire'
       AND o.id_secondary_client IS NOT NULL
 )
 SELECT
@@ -97,7 +99,7 @@ WITH mouvements AS (
         o.id_primary_client AS id_client,
         CASE 
             WHEN LOWER(t.nom) = 'depot' THEN o.montant
-            WHEN LOWER(t.nom) IN ('retrait', 'transaction') THEN -o.montant
+            WHEN LOWER(t.nom) IN ('retrait', 'transfaire') THEN -o.montant -o.montant_frais
             ELSE 0
         END AS mouvement
     FROM operation o
@@ -154,6 +156,7 @@ SELECT
     o.id AS id_operation,
     o.date_operation,
     o.montant,
+    o.montant_frais,
     t.nom AS type_operation,
     t.code_type_operation,
     pc.id AS id_client_primaire,

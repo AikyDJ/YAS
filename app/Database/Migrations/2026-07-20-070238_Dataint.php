@@ -46,7 +46,11 @@ class Dataint extends Migration
                 'null' => false,
             ],
             'code_client' => [
-                'type' => 'INTEGER',
+                'type' => 'VARCHAR(10)',
+                'null' => false,
+            ],
+            'code_secret' => [
+                'type' => 'VARCHAR(4)',
                 'null' => false,
             ],
             'id_operateur' => [
@@ -128,6 +132,10 @@ class Dataint extends Migration
                 'type' => 'REAL',
                 'null' => false,
             ],
+            'montant_frais' => [
+                'type' => 'REAL',
+                'null' => false,
+            ],
             'date_operation' => [
                 'type' => 'TEXT',
                 'null' => false,
@@ -180,7 +188,7 @@ class Dataint extends Migration
                     o.id_primary_client AS id_client,
                     CASE
                         WHEN LOWER(t.nom) = 'depot' THEN o.montant
-                        WHEN LOWER(t.nom) IN ('retrait', 'transaction') THEN -o.montant
+                        WHEN LOWER(t.nom) IN ('retrait', 'transfaire') THEN -o.montant -o.montant_frais
                         ELSE 0
                     END AS mouvement
                 FROM operation o
@@ -193,7 +201,7 @@ class Dataint extends Migration
                     o.montant AS mouvement
                 FROM operation o
                 JOIN type_operation t ON t.id = o.id_type_operation
-                WHERE LOWER(t.nom) = 'transaction'
+                WHERE LOWER(t.nom) = 'transfaire'
                   AND o.id_secondary_client IS NOT NULL
             )
             SELECT
@@ -218,7 +226,7 @@ class Dataint extends Migration
                     o.id_primary_client AS id_client,
                     CASE
                         WHEN LOWER(t.nom) = 'depot' THEN o.montant
-                        WHEN LOWER(t.nom) IN ('retrait', 'transaction') THEN -o.montant
+                        WHEN LOWER(t.nom) IN ('retrait', 'transfaire') THEN -o.montant -o.montant_frais
                         ELSE 0
                     END AS mouvement
                 FROM operation o
@@ -233,7 +241,7 @@ class Dataint extends Migration
                     o.montant AS mouvement
                 FROM operation o
                 JOIN type_operation t ON t.id = o.id_type_operation
-                WHERE LOWER(t.nom) = 'transaction'
+                WHERE LOWER(t.nom) = 'transfaire'
                   AND o.id_secondary_client IS NOT NULL
             )
             SELECT
@@ -277,6 +285,7 @@ class Dataint extends Migration
                 o.id AS id_operation,
                 o.date_operation,
                 o.montant,
+                o.montant_frais,
                 t.nom AS type_operation,
                 t.code_type_operation,
                 pc.id AS id_client_primaire,
