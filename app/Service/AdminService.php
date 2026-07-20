@@ -6,9 +6,6 @@ use Throwable;
 
 class AdminService
 {
-    private const MESSAGE_DB_NOT_INITIALIZED = 'Base de données non initialisée.';
-    private const JOIN_TYPE_OPERATION = 'type_operation t';
-
     private function db()
     {
         return \Config\Database::connect();
@@ -31,9 +28,9 @@ class AdminService
     private function normalizePrefix(array $row): array
     {
         return [
-            'id'      => $row['id'] ?? null,
-            'nom'     => $row['nom'] ?? null,
-            'prefixe' => $row['code_operateur'] ?? ($row['prefixe'] ?? ''),
+            'id'     => $row['id'] ?? null,
+            'nom'    => $row['nom'] ?? null,
+            'prefix' => $row['prefix'] ?? '',
         ];
     }
 
@@ -49,12 +46,16 @@ class AdminService
         ];
     }
 
-    private function normalizeTypeOperation(array $row): array
+    private function normalizeBareme(array $row): array
     {
         return [
-            'id'                  => $row['id'] ?? null,
-            'nom'                 => $row['nom'] ?? '',
-            'code_type_operation' => $row['code_type_operation'] ?? null,
+            'id'             => $row['id'] ?? null,
+            'type_operation' => $row['type_operation'] ?? 'N/A',
+            'montant_min'    => $row['montant_min'] ?? ($row['min_montant'] ?? 0),
+            'montant_max'    => $row['montant_max'] ?? ($row['max_montant'] ?? 0),
+            'montant'        => $row['montant'] ?? null,
+            'min_montant'    => $row['min_montant'] ?? ($row['montant_min'] ?? null),
+            'max_montant'    => $row['max_montant'] ?? ($row['montant_max'] ?? null),
         ];
     }
 
@@ -99,7 +100,7 @@ class AdminService
             $totalFrais = $db->table('operation o')
                 ->select('c.nom, c.prenom, o.id_type_operation, t.nom AS type_op, SUM(o.montant_frais) AS total_frais, COUNT(o.id) AS nb_operations')
                 ->join('client c', 'c.id = o.id_primary_client')
-                ->join(self::JOIN_TYPE_OPERATION, 't.id = o.id_type_operation')
+                ->join('type_operation t', 't.id = o.id_type_operation')
                 ->groupBy('c.id, o.id_type_operation')->get()->getResultArray();
 
             $gainsTotal = $db->table('operation')
@@ -133,7 +134,24 @@ class AdminService
 
     public function getPrefixes(): array
     {
-        return $this->safeTableRows('operateur', [$this, 'normalizePrefix'], 'code_operateur ASC');
+        $db = $this->db();
+
+        if (!$this->tableExists($db, 'prefix_operateur')) {
+            return [];
+        }
+
+        try {
+            $rows = $db->table('prefix_operateur po')
+                ->select('po.id, o.nom, po.prefix')
+                ->join('operateur o', 'o.id = po.id_operateur')
+                ->orderBy('po.prefix', 'ASC')
+                ->get()
+                ->getResultArray();
+
+            return array_map([$this, 'normalizePrefix'], $rows);
+        } catch (Throwable $exception) {
+            return [];
+        }
     }
 
     public function getComptes(): array
@@ -155,130 +173,24 @@ class AdminService
 
     public function getBaremes(): array
     {
-        $db = $this->db();
-
-        if (!$this->tableExists($db, 'frais_barem') || !$this->tableExists($db, 'type_operation')) {
-            return [];
-        }
-
-        try {
-            return $db->table('frais_barem fb')
-                ->select('fb.id, fb.id_type_operation, fb.montant, fb.min_montant, fb.max_montant, t.nom AS type_operation')
-                ->join('type_operation t', 't.id = fb.id_type_operation')
-                ->orderBy('fb.min_montant', 'ASC')
-                ->get()
-                ->getResultArray();
-        } catch (Throwable $exception) {
-            return [];
-        }
+        return $this->safeTableRows('frais_barem', [$this, 'normalizeBareme'], 'min_montant ASC');
     }
 
     public function getBaremeById($id): ?array
     {
         $db = $this->db();
 
-        if (!$this->tableExists($db, 'frais_barem') || !$this->tableExists($db, 'type_operation')) {
+        if (!$this->tableExists($db, 'frais_barem')) {
             return null;
         }
 
         try {
-            $bareme = $db->table('frais_barem fb')
-                ->select('fb.id, fb.id_type_operation, fb.montant, fb.min_montant, fb.max_montant, t.nom AS type_operation')
-                ->join('type_operation t', 't.id = fb.id_type_operation')
-                ->where('fb.id', $id)
-                ->get()
-                ->getRowArray();
+            $bareme = $db->table('frais_barem')->where('id', $id)->get()->getRowArray();
 
-            return $bareme ? $bareme : null;
+            return $bareme ? $this->normalizeBareme($bareme) : null;
         } catch (Throwable $exception) {
             return null;
         }
-    }
-
-    public function getTypeOperations(): array
-    {
-        return $this->safeTableRows('type_operation', [$this, 'normalizeTypeOperation'], 'code_type_operation ASC');
-    }
-
-    public function saveBareme(array $data): array
-    {
-        $db = $this->db();
-        $success = false;
-        $message = self::MESSAGE_DB_NOT_INITIALIZED;
-
-        if (!$this->tableExists($db, 'frais_barem') || !$this->tableExists($db, 'type_operation')) {
-            return ['success' => false, 'message' => $message];
-        }
-
-        $idTypeOperation = (int) ($data['id_type_operation'] ?? 0);
-        $montant = (float) ($data['montant'] ?? 0);
-        $minMontant = (float) ($data['min_montant'] ?? 0);
-        $maxMontant = (float) ($data['max_montant'] ?? 0);
-
-        if ($idTypeOperation <= 0 || $montant < 0 || $minMontant < 0 || $maxMontant < $minMontant) {
-            $message = 'Barème invalide.';
-        } else {
-            $payload = [
-                'id_type_operation' => $idTypeOperation,
-                'montant'           => $montant,
-                'min_montant'       => $minMontant,
-                'max_montant'       => $maxMontant,
-            ];
-
-            try {
-                if (!empty($data['id'])) {
-                    $db->table('frais_barem')->where('id', $data['id'])->update($payload);
-                    $message = 'Barème mis à jour.';
-                } else {
-                    $db->table('frais_barem')->insert($payload);
-                    $message = 'Barème enregistré.';
-                }
-
-                $success = true;
-            } catch (Throwable $exception) {
-                $message = 'Impossible d’enregistrer le barème.';
-            }
-        }
-
-        return ['success' => $success, 'message' => $message];
-    }
-
-    public function saveTypeOperation(array $data): array
-    {
-        $db = $this->db();
-        $success = false;
-        $message = self::MESSAGE_DB_NOT_INITIALIZED;
-
-        if (!$this->tableExists($db, 'type_operation')) {
-            return ['success' => false, 'message' => $message];
-        }
-
-        $nom = strtolower(trim((string) ($data['nom'] ?? '')));
-        $code = (int) ($data['code_type_operation'] ?? 0);
-
-        if ($nom === '' || $code <= 0) {
-            $message = 'Type d’opération invalide.';
-        } else {
-            try {
-                $exists = $db->table('type_operation')->where('code_type_operation', $code)->countAllResults();
-
-                if ($exists > 0) {
-                    $message = 'Code de type déjà utilisé.';
-                } else {
-                    $db->table('type_operation')->insert([
-                        'nom' => $nom,
-                        'code_type_operation' => $code,
-                    ]);
-
-                    $success = true;
-                    $message = 'Type d’opération ajouté.';
-                }
-            } catch (Throwable $exception) {
-                $message = 'Impossible d’ajouter le type d’opération.';
-            }
-        }
-
-        return ['success' => $success, 'message' => $message];
     }
 
     private function getGainsByType(string $type): float
@@ -308,31 +220,32 @@ class AdminService
         $success = false;
         $message = 'Préfixe ajouté.';
 
-        $codeOperateur = trim((string) ($data['code_operateur'] ?? ''));
-        if (!$this->tableExists($db, 'operateur')) {
+        $prefix = trim((string) ($data['prefix'] ?? ''));
+        $nom    = trim((string) ($data['nom'] ?? ''));
+
+        if (!$this->tableExists($db, 'prefix_operateur') || !$this->tableExists($db, 'operateur')) {
             $message = 'Base de données non initialisée.';
-        } elseif ($codeOperateur === '') {
+        } elseif ($prefix === '') {
             $message = 'Préfixe invalide.';
         } else {
-            $exists = $db->table('operateur')->where('code_operateur', $codeOperateur)->countAllResults();
+            $exists = $db->table('prefix_operateur')->where('prefix', $prefix)->countAllResults();
 
             if ($exists > 0) {
                 $message = 'Préfixe existant';
             } else {
-                $nom = trim((string) ($data['nom'] ?? ''));
-
-                if ($nom === '') {
-                    $nom = 'Préfixe ' . $codeOperateur;
-                }
+                $nomOp = $nom !== '' ? $nom : 'Préfixe ' . $prefix;
 
                 try {
-                    $db->table('operateur')->insert([
-                        'nom'            => $nom,
-                        'code_operateur' => $codeOperateur,
+                    $db->table('operateur')->insert(['nom' => $nomOp]);
+                    $idOperateur = $db->insertID();
+
+                    $db->table('prefix_operateur')->insert([
+                        'prefix'       => $prefix,
+                        'id_operateur' => $idOperateur,
                     ]);
                     $success = true;
                 } catch (Throwable $exception) {
-                    $message = 'Impossible d’ajouter le préfixe.';
+                    $message = 'Impossible d\'ajouter le préfixe.';
                 }
             }
         }
@@ -355,10 +268,9 @@ class AdminService
                 'max_montant' => $data['max_montant'] ?? 0,
             ]);
         } catch (Throwable $exception) {
-            return ['success' => false, 'message' => 'Impossible d’enregistrer le barème.'];
+            return ['success' => false, 'message' => 'Impossible d\'enregistrer le barème.'];
         }
 
         return ['success' => true, 'message' => 'Barème enregistré.'];
     }
-    
 }

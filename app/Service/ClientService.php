@@ -25,11 +25,11 @@ class ClientService
 
     public function __construct()
     {
-        $this->clientModel        = new Client();
-        $this->operationModel     = new Operation();
+        $this->clientModel = new Client();
+        $this->operationModel = new Operation();
         $this->typeOperationModel = new Typeoperation();
-        $this->fraisBaremModel    = new Fraitbarem();
-        $this->soldeClientModel   = new Soldeclient();
+        $this->fraisBaremModel = new Fraitbarem();
+        $this->soldeClientModel = new Soldeclient();
         $this->operationClientModel = new Operationclient();
         $this->clientOperateurModel = new Clientoperateur();
         $this->soldeHistoriqueModel = new Soldeclienthistorique();
@@ -85,9 +85,9 @@ class ClientService
         $operations = [];
         foreach ($rows as $row) {
             $operations[] = [
-                'date'      => $row['date_operation'],
-                'type'      => $row['type_operation'],
-                'montant'   => $row['montant'],
+                'date' => $row['date_operation'],
+                'type' => $row['type_operation'],
+                'montant' => $row['montant'],
                 'solde_jour' => $this->getSoldeAtDate($id_client, $row['date_operation']),
             ];
         }
@@ -148,34 +148,40 @@ class ClientService
      */
     public function insertOperation(int $id_client, string $type_nom, float $montant, string $code_secret): array
     {
-        if (!$this->verifyCodeSecret($id_client, $code_secret)) {
-            return ['success' => false, 'message' => 'Code secret incorrect.'];
+        $result = ['success' => true, 'message' => 'Opération effectuée avec succès.'];
+        try {
+
+
+            if (!$this->verifyCodeSecret($id_client, $code_secret)) {
+                $result = ['success' => false, 'message' => 'Code secret incorrect.'];
+            }
+
+            $type_id = $this->getTypeOperationId($type_nom);
+            if ($type_id === null) {
+                $result = ['success' => false, 'message' => 'Type d\'opération inconnu.'];
+            }
+
+            $solde = $this->getSolde($id_client);
+            $frais = $this->calculerFrais($montant);
+
+            if (strtolower($type_nom) === 'retrait' && ($montant + $frais) > $solde) {
+                $result = ['success' => false, 'message' => 'Solde insuffisant pour ce retrait.'];
+            }
+
+            $data = [
+                'id_primary_client' => $id_client,
+                'id_secondary_client' => null,
+                'id_type_operation' => $type_id,
+                'montant' => $montant,
+                'montant_frais' => $frais,
+                'date_operation' => date('Y-m-d'),
+            ];
+
+            $this->operationModel->insert($data);
+        } catch (\Exception $e) {
+            $result = ['success' => false, 'message' => 'Erreur lors de l\'opération : ' . $e->getMessage()];
         }
-
-        $type_id = $this->getTypeOperationId($type_nom);
-        if ($type_id === null) {
-            return ['success' => false, 'message' => 'Type d\'opération inconnu.'];
-        }
-
-        $solde = $this->getSolde($id_client);
-        $frais = $this->calculerFrais($montant);
-
-        if (strtolower($type_nom) === 'retrait' && ($montant + $frais) > $solde) {
-            return ['success' => false, 'message' => 'Solde insuffisant pour ce retrait.'];
-        }
-
-        $data = [
-            'id_primary_client'   => $id_client,
-            'id_secondary_client' => null,
-            'id_type_operation'   => $type_id,
-            'montant'             => $montant,
-            'montant_frais'       => $frais,
-            'date_operation'      => date('Y-m-d'),
-        ];
-
-        $this->operationModel->insert($data);
-
-        return ['success' => true, 'message' => 'Opération effectuée avec succès.'];
+        return $result;
     }
 
     /**
@@ -183,42 +189,48 @@ class ClientService
      */
     public function insertTransfert(int $id_emetteur, string $code_destinataire, float $montant, string $code_secret): array
     {
-        if (!$this->verifyCodeSecret($id_emetteur, $code_secret)) {
-            return ['success' => false, 'message' => 'Code secret incorrect.'];
+        $result = ['success' => true, 'message' => 'Transfert effectué avec succès.'];
+        try {
+
+
+            if (!$this->verifyCodeSecret($id_emetteur, $code_secret)) {
+                $result = ['success' => false, 'message' => 'Code secret incorrect.'];
+            }
+
+            $destinataire = $this->getClientDetails($code_destinataire);
+            if (!$destinataire) {
+                $result = ['success' => false, 'message' => 'Destinataire introuvable.'];
+            }
+
+            if ((int) $destinataire['id'] === $id_emetteur) {
+                $result = ['success' => false, 'message' => 'Vous ne pouvez pas vous transférer à vous-même.'];
+            }
+
+            $type_id = $this->getTypeOperationId('transfaire');
+            if ($type_id === null) {
+                $result = ['success' => false, 'message' => 'Type d\'opération inconnu.'];
+            }
+
+            $solde = $this->getSolde($id_emetteur);
+            $frais = $this->calculerFrais($montant);
+
+            if (($montant + $frais) > $solde) {
+                $result = ['success' => false, 'message' => 'Solde insuffisant pour ce transfert.'];
+            }
+
+            $data = [
+                'id_primary_client' => $id_emetteur,
+                'id_secondary_client' => (int) $destinataire['id'],
+                'id_type_operation' => $type_id,
+                'montant' => $montant,
+                'montant_frais' => $frais,
+                'date_operation' => date('Y-m-d'),
+            ];
+
+            $this->operationModel->insert($data);
+        } catch (\Exception $e) {
+            $result = ['success' => false, 'message' => 'Erreur lors du transfert : ' . $e->getMessage()];
         }
-
-        $destinataire = $this->getClientDetails($code_destinataire);
-        if (!$destinataire) {
-            return ['success' => false, 'message' => 'Destinataire introuvable.'];
-        }
-
-        if ((int) $destinataire['id'] === $id_emetteur) {
-            return ['success' => false, 'message' => 'Vous ne pouvez pas vous transférer à vous-même.'];
-        }
-
-        $type_id = $this->getTypeOperationId('transfaire');
-        if ($type_id === null) {
-            return ['success' => false, 'message' => 'Type d\'opération inconnu.'];
-        }
-
-        $solde = $this->getSolde($id_emetteur);
-        $frais = $this->calculerFrais($montant);
-
-        if (($montant + $frais) > $solde) {
-            return ['success' => false, 'message' => 'Solde insuffisant pour ce transfert.'];
-        }
-
-        $data = [
-            'id_primary_client'   => $id_emetteur,
-            'id_secondary_client' => (int) $destinataire['id'],
-            'id_type_operation'   => $type_id,
-            'montant'             => $montant,
-            'montant_frais'       => $frais,
-            'date_operation'      => date('Y-m-d'),
-        ];
-
-        $this->operationModel->insert($data);
-
-        return ['success' => true, 'message' => 'Transfert effectué avec succès.'];
+        return $result;
     }
 }

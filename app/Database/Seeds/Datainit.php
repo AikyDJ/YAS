@@ -9,12 +9,22 @@ class Datainit extends Seeder
     public function run()
     {
         // ---------------------------------------------------------
-        // Opérateurs
+        // Opérateurs (sans code_operateur — c'est dans prefix_operateur)
         // ---------------------------------------------------------
         $this->db->table('operateur')->insertBatch([
-            ['nom' => 'Orange Money', 'code_operateur' => 33],
-            ['nom' => 'Mvola', 'code_operateur' => 34],
-            ['nom' => 'Airtel Money', 'code_operateur' => 32],
+            ['nom' => 'Orange Money'],
+            ['nom' => 'Mvola'],
+            ['nom' => 'Airtel Money'],
+        ]);
+
+        // ---------------------------------------------------------
+        // Préfixes opérateurs
+        // id_operateur : 1 = Orange Money, 2 = Mvola, 3 = Airtel Money
+        // ---------------------------------------------------------
+        $this->db->table('prefix_operateur')->insertBatch([
+            ['prefix' => '033', 'id_operateur' => 1],
+            ['prefix' => '034', 'id_operateur' => 2],
+            ['prefix' => '032', 'id_operateur' => 3],
         ]);
 
         // ---------------------------------------------------------
@@ -27,14 +37,19 @@ class Datainit extends Seeder
         ]);
 
         // ---------------------------------------------------------
-        // Barème de frais (exemple)
+        // Barème de frais
         // ---------------------------------------------------------
         $this->db->table('frais_barem')->insertBatch([
-            ['id_type_operation' => 2, 'montant' => 100, 'min_montant' => 0, 'max_montant' => 5000],
-            ['id_type_operation' => 2, 'montant' => 300, 'min_montant' => 5001, 'max_montant' => 20000],
-            ['id_type_operation' => 2, 'montant' => 500, 'min_montant' => 20001, 'max_montant' => 50000],
-            ['id_type_operation' => 3, 'montant' => 1000, 'min_montant' => 50001, 'max_montant' => 100000],
-            ['id_type_operation' => 3, 'montant' => 2000, 'min_montant' => 100001, 'max_montant' => 500000],
+            ['montant' => 50, 'min_montant' => 100, 'max_montant' => 1000],
+            ['montant' => 50, 'min_montant' => 1001, 'max_montant' => 5000],
+            ['montant' => 100, 'min_montant' => 5001, 'max_montant' => 10000],
+            ['montant' => 200, 'min_montant' => 10001, 'max_montant' => 25000],
+            ['montant' => 400, 'min_montant' => 25001, 'max_montant' => 50000],
+            ['montant' => 800, 'min_montant' => 50001, 'max_montant' => 100000],
+            ['montant' => 1500, 'min_montant' => 100001, 'max_montant' => 250000],
+            ['montant' => 1500, 'min_montant' => 250001, 'max_montant' => 500000],
+            ['montant' => 2500, 'min_montant' => 500001, 'max_montant' => 1000000],
+            ['montant' => 3000, 'min_montant' => 1000001, 'max_montant' => 2000000],
         ]);
 
         // ---------------------------------------------------------
@@ -47,28 +62,11 @@ class Datainit extends Seeder
             ['nom' => 'Andry', 'prenom' => 'Paul', 'code_client' => '0012345', 'code_secret' => '0000', 'id_operateur' => 2],
             ['nom' => 'Hery', 'prenom' => 'Nirina', 'code_client' => '0001234', 'code_secret' => '0000', 'id_operateur' => 3],
         ]);
-        // ---------------------------------------------------------
-        // Barème de frais (exemple)
-        // ---------------------------------------------------------
-        $this->db->table('frais_barem')->insertBatch([
-            ['id_type_operation' => 2, 'montant' => 50, 'min_montant' => 100, 'max_montant' => 1000],
-            ['id_type_operation' => 2, 'montant' => 50, 'min_montant' => 1001, 'max_montant' => 5000],
-            ['id_type_operation' => 2, 'montant' => 100, 'min_montant' => 5001, 'max_montant' => 10000],
-            ['id_type_operation' => 2, 'montant' => 200, 'min_montant' => 10001, 'max_montant' => 25000],
-            ['id_type_operation' => 2, 'montant' => 400, 'min_montant' => 25001, 'max_montant' => 50000],
-            ['id_type_operation' => 3, 'montant' => 800, 'min_montant' => 50001, 'max_montant' => 100000],
-            ['id_type_operation' => 3, 'montant' => 1500, 'min_montant' => 100001, 'max_montant' => 250000],
-            ['id_type_operation' => 3, 'montant' => 1500, 'min_montant' => 250001, 'max_montant' => 500000],
-            ['id_type_operation' => 3, 'montant' => 2500, 'min_montant' => 500001, 'max_montant' => 1000000],
-            ['id_type_operation' => 3, 'montant' => 3000, 'min_montant' => 1000001, 'max_montant' => 2000000],
-        ]);
 
         // ---------------------------------------------------------
         // Opérations
-        // id_type_operation : 1 = depot, 2 = retrait, 3 = transaction
         // ---------------------------------------------------------
         $this->db->table('operation')->insertBatch([
-            // Dépôt : Rakoto dépose 50 000
             [
                 'id_primary_client' => 1,
                 'id_secondary_client' => null,
@@ -77,7 +75,6 @@ class Datainit extends Seeder
                 'montant_frais' => 400,
                 'date_operation' => '2026-01-05',
             ],
-            // Retrait : Rakoto retire 10 000
             [
                 'id_primary_client' => 1,
                 'id_secondary_client' => null,
@@ -86,7 +83,6 @@ class Datainit extends Seeder
                 'montant_frais' => 100,
                 'date_operation' => '2026-01-10',
             ],
-            // Transaction : Rakoto envoie 15 000 à Rasoa
             [
                 'id_primary_client' => 1,
                 'id_secondary_client' => 2,
@@ -95,7 +91,6 @@ class Datainit extends Seeder
                 'montant_frais' => 400,
                 'date_operation' => '2026-01-15',
             ],
-            // Dépôt : Andry dépose 20 000
             [
                 'id_primary_client' => 3,
                 'id_secondary_client' => null,
@@ -104,7 +99,6 @@ class Datainit extends Seeder
                 'montant_frais' => 200,
                 'date_operation' => '2026-02-01',
             ],
-            // Transaction : Andry envoie 5 000 à Hery
             [
                 'id_primary_client' => 3,
                 'id_secondary_client' => 4,
@@ -113,7 +107,6 @@ class Datainit extends Seeder
                 'montant_frais' => 50,
                 'date_operation' => '2026-02-10',
             ],
-            // Retrait : Rasoa retire 3 000
             [
                 'id_primary_client' => 2,
                 'id_secondary_client' => null,
