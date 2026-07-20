@@ -137,6 +137,7 @@ class AdminService
             'nb_operations'          => $this->tableExists($db, 'operation') ? (int) $db->table('operation')->countAllResults() : 0,
             'gains_retrait'          => $this->getGainsByType('retrait'),
             'gains_transfert'        => $this->getGainsByType('transfaire'),
+            'total_comissions'       => $this->getTotalComissions(),
             'gains_internes'         => (float) ($situationGain['gains_internes'] ?? $situationGain['gains_operateur'] ?? 0),
             'gains_externes'         => (float) ($situationGain['gains_externes'] ?? $situationGain['gains_autres_ops'] ?? 0),
             'total_gains'            => (float) ($situationGain['total_gains'] ?? 0),
@@ -248,6 +249,48 @@ class AdminService
         try {
             $result = $db->table('operation o')
                 ->select('SUM(o.montant_frais) AS total')
+                ->join('type_operation t', 't.id = o.id_type_operation')
+                ->where('LOWER(t.nom)', strtolower($type))
+                ->get()
+                ->getRowArray();
+
+            return (float) ($result['total'] ?? 0);
+        } catch (Throwable $exception) {
+            return 0.0;
+        }
+    }
+
+    public function getTotalComissions(): float
+    {
+        $db = $this->db();
+
+        if (!$this->tableExists($db, 'operation')) {
+            return 0.0;
+        }
+
+        try {
+            $result = $db->table('operation')
+                ->select('SUM(montant_comission) AS total')
+                ->get()
+                ->getRowArray();
+
+            return (float) ($result['total'] ?? 0);
+        } catch (Throwable $exception) {
+            return 0.0;
+        }
+    }
+
+    public function getComissionsByType(string $type): float
+    {
+        $db = $this->db();
+
+        if (!$this->tableExists($db, 'operation') || !$this->tableExists($db, 'type_operation')) {
+            return 0.0;
+        }
+
+        try {
+            $result = $db->table('operation o')
+                ->select('SUM(o.montant_comission) AS total')
                 ->join('type_operation t', 't.id = o.id_type_operation')
                 ->where('LOWER(t.nom)', strtolower($type))
                 ->get()

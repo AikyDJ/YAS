@@ -183,6 +183,7 @@ class ClientService
                 'id_type_operation' => $type_id,
                 'montant' => $montant,
                 'montant_frais' => $frais,
+                'montant_comission' => 0.0,
                 'date_operation' => date('Y-m-d'),
             ];
 
@@ -255,10 +256,25 @@ class ClientService
     {
         if ($id_emetteur !== $id_destinataire) {
             $destinataireOperateur = $this->operateurModel->find($id_destinataire);
-            return $montant * $destinataireOperateur['comission_ptc'];
+            return $montant * (($destinataireOperateur['comission_ptc'] ?? 0) / 100);
         }
         return 0.0;
-
-
     }
+
+    // insetion multiple transactions
+    public function insertMultipleOperations(int $id_client, array $operations, float $montant): array
+    {
+        $results = [];
+        $partMontant = $montant / count($operations);
+        foreach ($operations as $op) {
+            $destinataire = $this->verificationDetiataire($id_client, $op['code_secret']);
+            if (isset($destinataire['error'])) {
+                $results[] = $destinataire;
+                continue;
+            }
+            $results[] = $this->insertTransfert($id_client, $destinataire['destinataire'], $partMontant, $op['code_secret']);
+        }
+        return $results;
+    }
+
 }

@@ -20,7 +20,7 @@
             </div>
         </div>
 
-        <div class="grid-row grid-3">
+        <div class="grid-row grid-4">
             <div class="stat-card stat-blue">
                 <div class="stat-value"><?= $total_comptes ?? 0 ?></div>
                 <div class="stat-label">Comptes Clients</div>
@@ -33,7 +33,13 @@
                 <div class="stat-value"><?= number_format(($gains_retrait ?? 0) + ($gains_transfert ?? 0), 0, ',', ' ') ?></div>
                 <div class="stat-label">Gains Total (Ar)</div>
             </div>
+            <div class="stat-card stat-green">
+                <div class="stat-value"><?= number_format($total_comissions ?? 0, 0, ',', ' ') ?></div>
+                <div class="stat-label">Commissions Totales Autre Operateur (Ar)</div>
+            </div>
         </div>
+
+
 
         <?php if (!empty($total_gains)): ?>
             <div class="grid-row">
@@ -61,6 +67,18 @@
                     <div class="gain-row gain-total">
                         <span class="gain-label">Total Opérateur</span>
                         <span class="gain-value gain-gold"><?= number_format(($gains_retrait ?? 0) + ($gains_transfert ?? 0), 0, ',', ' ') ?> Ar</span>
+                    </div>
+                    <div class="gain-row">
+                        <span class="gain-label">Commissions Retraits</span>
+                        <span class="gain-value gain-green"><?= number_format($comissions_retrait ?? 0, 0, ',', ' ') ?> Ar</span>
+                    </div>
+                    <div class="gain-row">
+                        <span class="gain-label">Commissions Transferts</span>
+                        <span class="gain-value gain-blue"><?= number_format($comissions_transfert ?? 0, 0, ',', ' ') ?> Ar</span>
+                    </div>
+                    <div class="gain-row gain-total">
+                        <span class="gain-label">Total Commissions</span>
+                        <span class="gain-value gain-gold"><?= number_format($total_comissions ?? 0, 0, ',', ' ') ?> Ar</span>
                     </div>
                 </div>
             </div>
