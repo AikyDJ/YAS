@@ -62,7 +62,7 @@
                     <?php if (!empty($prefixes)): ?>
                         <div class="prefix-chips">
                             <?php foreach ($prefixes as $p): ?>
-                                <span class="prefix-chip"><?= $p['prefixe'] ?></span>
+                                <span class="prefix-chip"><?= $p['prefix'] ?></span>
                             <?php endforeach; ?>
                         </div>
                     <?php else: ?>

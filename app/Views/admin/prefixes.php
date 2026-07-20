@@ -55,9 +55,9 @@
                                 <?php foreach ($prefixes as $i => $p): ?>
                                     <tr>
                                         <td><?= $i + 1 ?></td>
-                                        <td class="td-prefix"><?= $p['prefixe'] ?></td>
+                                        <td class="td-prefix"><?= $p['prefix'] ?></td>
                                         <td>
-                                            <form action="<?= base_url('admin/prefixes/supprimer') ?>" method="POST" class="inline-form" onsubmit="return confirm('Supprimer le préfixe <?= $p['prefixe'] ?> ?')">
+                                            <form action="<?= base_url('admin/prefixes/supprimer') ?>" method="POST" class="inline-form" onsubmit="return confirm('Supprimer le préfixe <?= $p['prefix'] ?> ?')">
                                                 <?= csrf_field() ?>
                                                 <input type="hidden" name="id" value="<?= $p['id'] ?>">
                                                 <button type="submit" class="btn-delete">Supprimer</button>

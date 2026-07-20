@@ -28,9 +28,9 @@ class AdminService
     private function normalizePrefix(array $row): array
     {
         return [
-            'id'      => $row['id'] ?? null,
-            'nom'     => $row['nom'] ?? null,
-            'prefixe' => $row['code_operateur'] ?? ($row['prefixe'] ?? ''),
+            'id'     => $row['id'] ?? null,
+            'nom'    => $row['nom'] ?? null,
+            'prefix' => $row['prefix'] ?? '',
         ];
     }
 
@@ -134,7 +134,24 @@ class AdminService
 
     public function getPrefixes(): array
     {
-        return $this->safeTableRows('operateur', [$this, 'normalizePrefix'], 'code_operateur ASC');
+        $db = $this->db();
+
+        if (!$this->tableExists($db, 'prefix_operateur')) {
+            return [];
+        }
+
+        try {
+            $rows = $db->table('prefix_operateur po')
+                ->select('po.id, o.nom, po.prefix')
+                ->join('operateur o', 'o.id = po.id_operateur')
+                ->orderBy('po.prefix', 'ASC')
+                ->get()
+                ->getResultArray();
+
+            return array_map([$this, 'normalizePrefix'], $rows);
+        } catch (Throwable $exception) {
+            return [];
+        }
     }
 
     public function getComptes(): array
@@ -203,31 +220,32 @@ class AdminService
         $success = false;
         $message = 'Préfixe ajouté.';
 
-        $codeOperateur = trim((string) ($data['code_operateur'] ?? ''));
-        if (!$this->tableExists($db, 'operateur')) {
+        $prefix = trim((string) ($data['prefix'] ?? ''));
+        $nom    = trim((string) ($data['nom'] ?? ''));
+
+        if (!$this->tableExists($db, 'prefix_operateur') || !$this->tableExists($db, 'operateur')) {
             $message = 'Base de données non initialisée.';
-        } elseif ($codeOperateur === '') {
+        } elseif ($prefix === '') {
             $message = 'Préfixe invalide.';
         } else {
-            $exists = $db->table('operateur')->where('code_operateur', $codeOperateur)->countAllResults();
+            $exists = $db->table('prefix_operateur')->where('prefix', $prefix)->countAllResults();
 
             if ($exists > 0) {
                 $message = 'Préfixe existant';
             } else {
-                $nom = trim((string) ($data['nom'] ?? ''));
-
-                if ($nom === '') {
-                    $nom = 'Préfixe ' . $codeOperateur;
-                }
+                $nomOp = $nom !== '' ? $nom : 'Préfixe ' . $prefix;
 
                 try {
-                    $db->table('operateur')->insert([
-                        'nom'            => $nom,
-                        'code_operateur' => $codeOperateur,
+                    $db->table('operateur')->insert(['nom' => $nomOp]);
+                    $idOperateur = $db->insertID();
+
+                    $db->table('prefix_operateur')->insert([
+                        'prefix'       => $prefix,
+                        'id_operateur' => $idOperateur,
                     ]);
                     $success = true;
                 } catch (Throwable $exception) {
-                    $message = 'Impossible d’ajouter le préfixe.';
+                    $message = 'Impossible d\'ajouter le préfixe.';
                 }
             }
         }
@@ -250,7 +268,7 @@ class AdminService
                 'max_montant' => $data['max_montant'] ?? 0,
             ]);
         } catch (Throwable $exception) {
-            return ['success' => false, 'message' => 'Impossible d’enregistrer le barème.'];
+            return ['success' => false, 'message' => 'Impossible d\'enregistrer le barème.'];
         }
 
         return ['success' => true, 'message' => 'Barème enregistré.'];

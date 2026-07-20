@@ -4,15 +4,15 @@ namespace App\Models;
 
 use CodeIgniter\Model;
 
-class Operateur extends Model
+class Prefixoperateur extends Model
 {
-    protected $table            = 'operateur';
+    protected $table            = 'prefix_operateur';
     protected $primaryKey       = 'id';
     protected $useAutoIncrement = true;
     protected $returnType       = 'array';
     protected $useSoftDeletes   = false;
     protected $protectFields    = true;
-    protected $allowedFields    = ['nom'];
+    protected $allowedFields    = ['prefix', 'id_operateur'];
 
     protected bool $allowEmptyInserts = false;
     protected bool $updateOnlyChanged = true;

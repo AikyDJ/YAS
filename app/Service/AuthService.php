@@ -17,12 +17,12 @@ class AuthService
     }
 
     /**
-     * Parse un numéro de téléphone et retourne [code_operateur, code_client]
+     * Parse un numéro de téléphone et retourne [prefix, code_client]
      * ou null si le format est invalide.
      *
      * Formats acceptés :
-     *   +261331234567  →  code_operateur = 33,  code_client = 1234567
-     *   0331234567     →  code_operateur = 33,  code_client = 1234567
+     *   +261331234567  →  prefix = 033,  code_client = 1234567
+     *   0331234567     →  prefix = 033,  code_client = 1234567
      */
     private function parseTelephone(string $telephone): ?array
     {
@@ -37,11 +37,11 @@ class AuthService
             $number = $m[1];
         }
 
-        // 331234567 → code_operateur = 33 (2 chiffres), code_client = 1234567
+        // 331234567 → prefix = 033 (3 chiffres avec 0), code_client = 1234567
         if (preg_match('/^(\d{2})(\d{7})$/', $number, $m)) {
             return [
-                'code_operateur' => (int) $m[1],
-                'code_client'    => $m[2],
+                'prefix'      => '0' . $m[1],
+                'code_client' => $m[2],
             ];
         }
 
@@ -65,14 +65,15 @@ class AuthService
 
             $sql = 'SELECT c.* FROM client c '
                  . 'JOIN operateur o ON c.id_operateur = o.id '
+                 . 'JOIN prefix_operateur po ON po.id_operateur = o.id '
                  . 'WHERE c.code_client = :code_client: '
                  . 'AND c.code_secret = :code_secret: '
-                 . 'AND o.code_operateur = :code_operateur:';
+                 . 'AND po.prefix = :prefix:';
 
             $result = $db->query($sql, [
-                'code_client'    => $parsed['code_client'],
-                'code_secret'    => $codeSecret,
-                'code_operateur' => $parsed['code_operateur'],
+                'code_client' => $parsed['code_client'],
+                'code_secret' => $codeSecret,
+                'prefix'      => $parsed['prefix'],
             ]);
 
             $row = $result->getRowArray();
@@ -83,4 +84,3 @@ class AuthService
         }
     }
 }
-
