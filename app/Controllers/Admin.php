@@ -36,7 +36,7 @@ class Admin extends BaseController
     {
         $result = $this->adminService->addNewPrefix([
             'nom'            => $this->request->getPost('nom'),
-            'code_operateur' => $this->request->getPost('prefixe'),
+            'prefix'         => $this->request->getPost('prefixe'),
         ]);
 
         $type = $result['success'] ? 'success' : 'error';
@@ -45,12 +45,8 @@ class Admin extends BaseController
 
     public function supprimerPrefixe()
     {
-        $id = $this->request->getPost('id');
-        $db = \Config\Database::connect();
-
-        $db->table('operateur')->where('id', $id)->delete();
-
-        return redirect()->to('/admin/prefixes')->with('success', 'Préfixe supprimé.');
+        $result = $this->adminService->deletePrefix((int) $this->request->getPost('id'));
+        return redirect()->to('/admin/prefixes')->with($result['success'] ? 'success' : 'error', $result['message']);
     }
 
     public function baremes(): string
@@ -58,6 +54,7 @@ class Admin extends BaseController
         $data = [
             'bareme'  => null,
             'baremes' => $this->adminService->getBaremes(),
+            'types'   => $this->adminService->getTypeOperations(),
         ];
 
         return view('admin/baremes', $data);
@@ -65,24 +62,15 @@ class Admin extends BaseController
 
     public function sauvegarderBareme()
     {
-        $tranches = $this->request->getPost('tranches');
-        $saved = false;
+        $result = $this->adminService->saveBareme([
+            'id'               => $this->request->getPost('id'),
+            'id_type_operation'=> $this->request->getPost('id_type_operation'),
+            'montant'          => $this->request->getPost('montant'),
+            'min_montant'      => $this->request->getPost('min_montant'),
+            'max_montant'      => $this->request->getPost('max_montant'),
+        ]);
 
-        if (!empty($tranches)) {
-            foreach ($tranches as $tranche) {
-                if (!empty($tranche['min']) && !empty($tranche['max']) && !empty($tranche['frais'])) {
-                    $result = $this->adminService->createFraisTranche([
-                        'montant'     => $tranche['frais'],
-                        'min_montant' => $tranche['min'],
-                        'max_montant' => $tranche['max'],
-                    ]);
-
-                    $saved = $saved || !empty($result['success']);
-                }
-            }
-        }
-
-        return redirect()->to('/admin/baremes')->with('success', $saved ? 'Barème enregistré.' : 'Aucune tranche valide à enregistrer.');
+        return redirect()->to('/admin/baremes')->with($result['success'] ? 'success' : 'error', $result['message']);
     }
 
     public function modifierBareme($id)
@@ -92,6 +80,7 @@ class Admin extends BaseController
         $data = [
             'bareme'  => $bareme,
             'baremes' => $this->adminService->getBaremes(),
+            'types'   => $this->adminService->getTypeOperations(),
         ];
 
         return view('admin/baremes', $data);
@@ -100,11 +89,31 @@ class Admin extends BaseController
     public function supprimerBareme()
     {
         $id = $this->request->getPost('id');
-        $db = \Config\Database::connect();
-
-        $db->table('frais_barem')->where('id', $id)->delete();
-
+        $bareme = $this->adminService->getBaremeById($id);
+        if ($bareme === null) {
+            return redirect()->to('/admin/baremes')->with('error', 'Barème introuvable.');
+        }
+        \Config\Database::connect()->table('frais_barem')->where('id', $bareme['id'])->delete();
         return redirect()->to('/admin/baremes')->with('success', 'Barème supprimé.');
+    }
+
+    public function types(): string
+    {
+        $data = [
+            'types' => $this->adminService->getTypeOperations(),
+        ];
+
+        return view('admin/types', $data);
+    }
+
+    public function ajouterTypeOperation()
+    {
+        $result = $this->adminService->saveTypeOperation([
+            'nom' => $this->request->getPost('nom'),
+            'code_type_operation' => $this->request->getPost('code_type_operation'),
+        ]);
+
+        return redirect()->to('/admin/types')->with($result['success'] ? 'success' : 'error', $result['message']);
     }
 
     public function logout()

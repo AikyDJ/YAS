@@ -19,6 +19,9 @@ class Client extends BaseController
     public function dashboard(): string
     {
         $id_client = session()->get('id_client');
+        if (!$id_client) {
+            return redirect()->to('/')->with('error', 'Veuillez vous connecter.');
+        }
         $client = $id_client ? $this->clientService->getClientOperateurById($id_client) : null;
         $data = [
             'solde'      => $id_client ? $this->clientService->getSolde($id_client) : 0,
@@ -36,6 +39,9 @@ class Client extends BaseController
     public function procederOperation()
     {
         $id_client   = session()->get('id_client');
+        if (!$id_client) {
+            return redirect()->to('/')->with('error', 'Veuillez vous connecter.');
+        }
         $type        = $this->request->getPost('type_operation');
         $montant     = (float) $this->request->getPost('montant');
         $codeSecret  = $this->request->getPost('code_secret');
@@ -52,6 +58,9 @@ class Client extends BaseController
     public function procederTransfert()
     {
         $id_client     = session()->get('id_client');
+        if (!$id_client) {
+            return redirect()->to('/')->with('error', 'Veuillez vous connecter.');
+        }
         $destinataire  = $this->request->getPost('destinataire');
         $montant       = (float) $this->request->getPost('montant');
         $codeSecret    = $this->request->getPost('code_secret');
@@ -63,5 +72,20 @@ class Client extends BaseController
         }
 
         return redirect()->to('/client/dashboard')->with('error', $result['message']);
+    }
+
+    public function getFraisTranche(int $montant)
+    {
+        if (!session()->get('id_client')) {
+            return $this->response->setStatusCode(401)->setJSON(['error' => 'Non authentifié']);
+        }
+
+        return $this->response->setJSON(['frais' => $this->operationService->getfraisTranche($montant)]);
+    }
+
+    public function logout()
+    {
+        session()->remove('id_client');
+        return redirect()->to('/')->with('success', 'Vous êtes déconnecté.');
     }
 }

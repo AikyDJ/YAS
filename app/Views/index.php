@@ -12,6 +12,13 @@
             <div class="login-logo">YAS</div>
             <p class="login-subtitle">Mobile Money</p>
 
+            <?php if (session()->getFlashdata('error')): ?>
+                <div class="alert-message error"><?= esc(session()->getFlashdata('error')) ?></div>
+            <?php endif; ?>
+            <?php if (session()->getFlashdata('success')): ?>
+                <div class="alert-message success"><?= esc(session()->getFlashdata('success')) ?></div>
+            <?php endif; ?>
+
             <form action="<?= base_url('/auth') ?>" method="POST" class="login-form">
                 <?= csrf_field() ?>
 

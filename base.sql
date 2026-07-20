@@ -10,7 +10,8 @@ PRAGMA foreign_keys = ON;
 
 CREATE TABLE IF NOT EXISTS operateur(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    nom TEXT NOT NULL
+    nom TEXT NOT NULL,
+    comission_ptc REAL NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS prefix_operateur(
@@ -50,6 +51,7 @@ CREATE TABLE IF NOT EXISTS operation(
     id_type_operation INTEGER NOT NULL,
     montant REAL NOT NULL,
     montant_frais REAL NOT NULL,
+    montant_comission REAL NOT NULL,
     date_operation TEXT NOT NULL,
     FOREIGN KEY (id_primary_client) REFERENCES client(id),
     FOREIGN KEY (id_secondary_client) REFERENCES client(id),
@@ -176,6 +178,7 @@ SELECT
     o.date_operation,
     o.montant,
     o.montant_frais,
+    o.montant_comission,
     t.nom AS type_operation,
     t.code_type_operation,
     pc.id AS id_client_primaire,

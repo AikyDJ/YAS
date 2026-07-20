@@ -21,6 +21,7 @@ class Operationclient extends Model
     protected array $casts = [
         'montant'         => 'float',
         'montant_frais'   => 'float',
+        'montant_comission' => 'float',
     ];
     protected array $castHandlers = [];
 

@@ -25,6 +25,9 @@ $routes->get('/admin/prefixes', 'Admin::prefixes');
 $routes->post('/admin/prefixes/ajouter', 'Admin::ajouterPrefixe');
 $routes->post('/admin/prefixes/supprimer', 'Admin::supprimerPrefixe');
 
+$routes->get('/admin/types', 'Admin::types');
+$routes->post('/admin/types/ajouter', 'Admin::ajouterTypeOperation');
+
 $routes->get('/admin/baremes', 'Admin::baremes');
 $routes->post('/admin/baremes/sauvegarder', 'Admin::sauvegarderBareme');
 $routes->get('/admin/baremes/modifier/(:num)', 'Admin::modifierBareme/$1');

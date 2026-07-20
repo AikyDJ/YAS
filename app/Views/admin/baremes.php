@@ -13,6 +13,7 @@
                 <nav class="op-nav">
                     <a href="<?= base_url('admin/dashboard') ?>" class="op-link">Vue Générale</a>
                     <a href="<?= base_url('admin/prefixes') ?>" class="op-link">Préfixes</a>
+                    <a href="<?= base_url('admin/types') ?>" class="op-link">Types</a>
                     <a href="<?= base_url('admin/baremes') ?>" class="op-link active">Barèmes</a>
                     <a href="<?= base_url('admin/logout') ?>" class="op-link op-link-logout">Déconnexion</a>
                 </nav>
@@ -38,13 +39,31 @@
                     <input type="hidden" name="id" value="<?= $bareme['id'] ?? '' ?>">
 
                     <div class="form-group">
-                        <label for="type_operation">Type d'opération</label>
-                        <select name="type_operation" id="type_operation" required>
+                        <label for="id_type_operation">Type d'opération</label>
+                        <select name="id_type_operation" id="id_type_operation" required>
                             <option value="">-- Choisir --</option>
-                            <option value="depot" <?= ($bareme['type_operation'] ?? '') === 'depot' ? 'selected' : '' ?>>Dépôt</option>
-                            <option value="retrait" <?= ($bareme['type_operation'] ?? '') === 'retrait' ? 'selected' : '' ?>>Retrait</option>
-                            <option value="transfert" <?= ($bareme['type_operation'] ?? '') === 'transfert' ? 'selected' : '' ?>>Transfert</option>
+                            <?php if (!empty($types)): ?>
+                                <?php foreach ($types as $type): ?>
+                                    <option value="<?= $type['id'] ?>" <?= (!empty($bareme['id_type_operation']) && (int) $bareme['id_type_operation'] === (int) $type['id']) ? 'selected' : '' ?>><?= ucfirst($type['nom']) ?></option>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
                         </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="montant">Montant des frais</label>
+                        <input type="number" name="montant" id="montant" min="0" step="0.01" value="<?= esc($bareme['montant'] ?? '') ?>" required>
+                    </div>
+
+                    <div class="grid-row grid-3">
+                        <div class="form-group">
+                            <label for="min_montant">Min (Ar)</label>
+                            <input type="number" name="min_montant" id="min_montant" min="0" step="0.01" value="<?= esc($bareme['min_montant'] ?? '') ?>" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="max_montant">Max (Ar)</label>
+                            <input type="number" name="max_montant" id="max_montant" min="0" step="0.01" value="<?= esc($bareme['max_montant'] ?? '') ?>" required>
+                        </div>
                     </div>
 
                     <div class="tranches-header">
@@ -55,31 +74,16 @@
                     <div id="tranches-list">
                         <div class="tranche-row" data-index="0">
                             <div class="form-group">
-                                <label>Min (Ar)</label>
-                                <input type="number" name="tranches[0][min]" min="0" placeholder="0" class="tranche-min">
+                                <label for="tranche-0-min">Min (Ar)</label>
+                                <input type="number" id="tranche-0-min" name="tranches[0][min]" min="0" placeholder="0" class="tranche-min">
                             </div>
                             <div class="form-group">
-                                <label>Max (Ar)</label>
-                                <input type="number" name="tranches[0][max]" min="0" placeholder="10 000" class="tranche-max">
+                                <label for="tranche-0-max">Max (Ar)</label>
+                                <input type="number" id="tranche-0-max" name="tranches[0][max]" min="0" placeholder="10 000" class="tranche-max">
                             </div>
                             <div class="form-group">
-                                <label>Frais (%)</label>
-                                <input type="number" name="tranches[0][frais]" min="0" step="0.01" placeholder="1.5" class="tranche-frais">
-                            </div>
-                            <button type="button" class="btn-remove-tranche" title="Supprimer">&times;</button>
-                        </div>
-                        <div class="tranche-row" data-index="1">
-                            <div class="form-group">
-                                <label>Min (Ar)</label>
-                                <input type="number" name="tranches[1][min]" min="0" placeholder="10 001" class="tranche-min">
-                            </div>
-                            <div class="form-group">
-                                <label>Max (Ar)</label>
-                                <input type="number" name="tranches[1][max]" min="0" placeholder="50 000" class="tranche-max">
-                            </div>
-                            <div class="form-group">
-                                <label>Frais (%)</label>
-                                <input type="number" name="tranches[1][frais]" min="0" step="0.01" placeholder="2.0" class="tranche-frais">
+                                <label for="tranche-0-frais">Frais (%)</label>
+                                <input type="number" id="tranche-0-frais" name="tranches[0][frais]" min="0" step="0.01" placeholder="1.5" class="tranche-frais">
                             </div>
                             <button type="button" class="btn-remove-tranche" title="Supprimer">&times;</button>
                         </div>
@@ -152,16 +156,16 @@
             const html = `
             <div class="tranche-row" data-index="${trancheIndex}">
                 <div class="form-group">
-                    <label>Min (Ar)</label>
-                    <input type="number" name="tranches[${trancheIndex}][min]" min="0" placeholder="0" class="tranche-min">
+                    <label for="tranche-${trancheIndex}-min">Min (Ar)</label>
+                    <input type="number" id="tranche-${trancheIndex}-min" name="tranches[${trancheIndex}][min]" min="0" placeholder="0" class="tranche-min">
                 </div>
                 <div class="form-group">
-                    <label>Max (Ar)</label>
-                    <input type="number" name="tranches[${trancheIndex}][max]" min="0" placeholder="100 000" class="tranche-max">
+                    <label for="tranche-${trancheIndex}-max">Max (Ar)</label>
+                    <input type="number" id="tranche-${trancheIndex}-max" name="tranches[${trancheIndex}][max]" min="0" placeholder="100 000" class="tranche-max">
                 </div>
                 <div class="form-group">
-                    <label>Frais (%)</label>
-                    <input type="number" name="tranches[${trancheIndex}][frais]" min="0" step="0.01" placeholder="3.0" class="tranche-frais">
+                    <label for="tranche-${trancheIndex}-frais">Frais (%)</label>
+                    <input type="number" id="tranche-${trancheIndex}-frais" name="tranches[${trancheIndex}][frais]" min="0" step="0.01" placeholder="3.0" class="tranche-frais">
                 </div>
                 <button type="button" class="btn-remove-tranche" title="Supprimer">&times;</button>
             </div>`;

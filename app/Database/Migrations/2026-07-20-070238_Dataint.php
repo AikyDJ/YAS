@@ -20,6 +20,10 @@ class Dataint extends Migration
                 'type' => 'TEXT',
                 'null' => false,
             ],
+            'comission_ptc' => [
+                'type' => 'REAL',
+                'null' => false,
+            ],
         ]);
         $this->forge->addPrimaryKey('id');
         $this->forge->createTable('operateur');
@@ -88,6 +92,10 @@ class Dataint extends Migration
                 'type'           => 'INTEGER',
                 'auto_increment' => true,
             ],
+            'id_type_operation' => [
+                'type' => 'INTEGER',
+                'null' => false,
+            ],
             'montant' => [
                 'type' => 'REAL',
                 'null' => false,
@@ -102,6 +110,7 @@ class Dataint extends Migration
             ],
         ]);
         $this->forge->addPrimaryKey('id');
+        $this->forge->addForeignKey('id_type_operation', 'type_operation', 'id', false, false);
         $this->forge->createTable('frais_barem');
 
         // ---------------------------------------------------------
@@ -150,6 +159,10 @@ class Dataint extends Migration
                 'null' => false,
             ],
             'montant_frais' => [
+                'type' => 'REAL',
+                'null' => false,
+            ],
+            'montant_comission' => [
                 'type' => 'REAL',
                 'null' => false,
             ],
@@ -304,6 +317,7 @@ class Dataint extends Migration
                 o.date_operation,
                 o.montant,
                 o.montant_frais,
+                o.montant_comission,
                 t.nom AS type_operation,
                 t.code_type_operation,
                 pc.id AS id_client_primaire,
