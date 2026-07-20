@@ -360,4 +360,5 @@ class AdminService
 
         return ['success' => true, 'message' => 'Barème enregistré.'];
     }
+    
 }

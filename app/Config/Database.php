@@ -26,7 +26,9 @@ class Database extends Config
      * @var array<string, mixed>
      */
     public array $default = [
-        'database' => 'database.db',
+        // Use an absolute path so SQLite does not create a separate empty
+        // database relative to the current working directory.
+        'database' => ROOTPATH . 'identifier.sqlite',
         'DBDriver' => 'SQLite3',
         'DBPrefix' => '',
         'DBDebug' => true,
