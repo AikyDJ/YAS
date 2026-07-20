@@ -1,0 +1,747 @@
+@use 'sass:color';
+
+// ==========================================
+// Variables — Mobile Money Dark Theme
+// ==========================================
+
+// Backgrounds
+$bg-primary:   #0f1013;
+$bg-surface:   #1c1d22;
+$bg-elevated:  #22242a;
+$bg-hover:     #2a2d35;
+$bg-input:     #181a1f;
+
+// Text
+$text-primary:    #e8eaed;
+$text-secondary:  #9aa0a6;
+$text-muted:      #5f6368;
+$text-on-accent:  #0f1013;
+
+// Accents — Mobile Money
+$green:    #00e676;   // Dépôt, succès, gains
+$purple:   #7c4dff;   // Navigation, focus
+$blue:     #00b0ff;   // Liens, transfert
+$red:      #ff5252;   // Retrait, erreurs, frais
+$gold:     #ffd740;   // Solde, montants
+
+// Borders
+$border:     #2e3039;
+$border-lt:  #3a3d47;
+
+// Radius
+$r-sm:  6px;
+$r-md:  10px;
+$r-lg:  16px;
+$r-xl:  20px;
+
+// Card credit-card
+$card-radius:    1em;
+$card-height:    203px;
+$card-aspect:    1.579;
+$content-aspect: 1.604;
+$shadow-color:   #111;
+
+// ==========================================
+// Reset & Base
+// ==========================================
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: $bg-primary;
+  color: $text-primary;
+  min-height: 100vh;
+  line-height: 1.5;
+}
+
+a {
+  color: $blue;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+// ==========================================
+// Scrollbar
+// ==========================================
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: $bg-primary;
+}
+::-webkit-scrollbar-thumb {
+  background: $border-lt;
+  border-radius: 3px;
+}
+
+// ==========================================
+// Central Layout
+// ==========================================
+.central-div {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-height: 100vh;
+}
+
+.client-div {
+  width: 100%;
+}
+
+// ==========================================
+// Card (generic)
+// ==========================================
+.card {
+  background: $bg-surface;
+  border: 1px solid $border;
+  border-radius: $r-lg;
+  padding: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card h3 {
+  color: $text-primary;
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid $border;
+  letter-spacing: 0.3px;
+}
+
+.card p {
+  color: $text-secondary;
+  line-height: 1.7;
+}
+
+.card ul {
+  list-style: none;
+  padding: 0;
+
+  li {
+    padding: 10px 14px;
+    background: $bg-elevated;
+    border-radius: $r-sm;
+    margin-bottom: 6px;
+    color: $blue;
+    font-weight: 600;
+    font-size: 0.95rem;
+    border: 1px solid $border;
+  }
+}
+
+// ==========================================
+// Navigation
+// ==========================================
+.op-nav {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+
+  .op-link {
+    padding: 10px 18px;
+    text-decoration: none;
+    color: $text-secondary;
+    background: $bg-elevated;
+    border: 1px solid $border;
+    border-radius: $r-md;
+    transition: all 0.2s ease;
+    font-weight: 600;
+    font-size: 0.85rem;
+    white-space: nowrap;
+
+    &:hover {
+      background: $purple;
+      color: #fff;
+      border-color: $purple;
+      box-shadow: 0 2px 12px rgba($purple, 0.3);
+    }
+
+    &.active {
+      background: $purple;
+      color: #fff;
+      border-color: $purple;
+      box-shadow: 0 2px 12px rgba($purple, 0.3);
+    }
+  }
+}
+
+// ==========================================
+// Balance Card (credit-card style)
+// ==========================================
+.sold-card {
+  .main-container {
+    position: relative;
+    height: $card-height;
+    aspect-ratio: $card-aspect;
+    border-radius: $card-radius;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 300ms ease-in;
+    margin: 0 auto;
+  }
+
+  .border {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: $card-radius;
+    background: linear-gradient(
+      115deg,
+      rgba(0, 0, 0, 0.33) 12%,
+      rgba(255, 255, 255, 0.33) 27%,
+      rgba(255, 255, 255, 0.33) 31%,
+      rgba(0, 0, 0, 0.33) 52%
+    );
+  }
+
+  .card-inner {
+    height: 12.5em;
+    aspect-ratio: 1.586;
+    border-radius: $card-radius;
+    background-color: #999;
+    opacity: 0.8;
+    background-image: linear-gradient(to right, #777, #777 2px, #999 2px, #999);
+    background-size: 4px 100%;
+  }
+
+  .shadow {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: 0.85em;
+    border: 1px solid #bbb;
+    background:
+      radial-gradient(circle at 100% 100%, #fff 0, #fff 8px, transparent 8px) 0% 0% / 13px 13px no-repeat,
+      radial-gradient(circle at 0 100%, #fff 0, #fff 8px, transparent 8px) 100% 0% / 13px 13px no-repeat,
+      radial-gradient(circle at 100% 0, #fff 0, #fff 8px, transparent 8px) 0% 100% / 13px 13px no-repeat,
+      radial-gradient(circle at 0 0, #fff 0, #fff 8px, transparent 8px) 100% 100% / 13px 13px no-repeat,
+      linear-gradient(#fff, #fff) 50% 50% / calc(100% - 10px) calc(100% - 26px) no-repeat,
+      linear-gradient(#fff, #fff) 50% 50% / calc(100% - 26px) calc(100% - 10px) no-repeat,
+      linear-gradient(
+        135deg,
+        rgba(3, 3, 3, 0.5) 0%,
+        transparent 22%,
+        transparent 47%,
+        transparent 73%,
+        rgba(0, 0, 0, 0.5) 100%
+      );
+  }
+
+  .content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    border-radius: 0.6em;
+    border: 1px solid #aaa;
+    box-shadow: -1px -1px 0 #ddd;
+    transform: translate(-50%, -50%);
+    height: 12em;
+    aspect-ratio: $content-aspect;
+    background-image: linear-gradient(to right, #777, #555 2px, #aaa 2px, #aaa);
+    background-size: 4px 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 1.2em;
+  }
+
+  .rev {
+    color: rgba(255, 255, 255, 0.62);
+    font-size: 1.25em;
+    text-shadow: -1px -1px #333;
+    font-weight: 600;
+  }
+
+  .solde-amount {
+    font-size: 1.8em;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: -1px -1px #333;
+    text-align: center;
+    letter-spacing: 1px;
+  }
+
+  .master-text {
+    font-size: 0.75em;
+    color: #fff;
+    text-shadow: -1px -1px #333;
+    opacity: 0.75;
+    text-align: right;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .ultra-text {
+    font-size: 0.5em;
+    color: rgba(255, 255, 255, 0.66);
+    text-shadow: -1px -1px #333;
+    text-align: right;
+  }
+
+  .chip {
+    position: absolute;
+    top: 27.5%;
+    left: 8.25%;
+  }
+
+  .master {
+    position: absolute;
+    bottom: 1.25em;
+    right: 0.5em;
+    background: linear-gradient(
+      90deg,
+      rgba(75, 75, 75, 0.25) 0%,
+      rgba(121, 121, 121, 1) 100%
+    );
+    color: #fff;
+    height: 2.5em;
+    width: 2.5em;
+    border: 1px solid #bbb;
+    border-radius: 50%;
+
+    &.one {
+      right: 2em;
+    }
+  }
+}
+
+// ==========================================
+// Operations
+// ==========================================
+.operation-card {
+  width: 100%;
+}
+
+.op-content {
+  margin-top: 12px;
+}
+
+// ==========================================
+// Forms
+// ==========================================
+.form-group {
+  margin-bottom: 18px;
+
+  label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+    color: $text-secondary;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  input,
+  select {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid $border-lt;
+    border-radius: $r-md;
+    font-size: 1rem;
+    background: $bg-input;
+    color: $text-primary;
+    transition: border-color 0.2s, box-shadow 0.2s;
+
+    &:focus {
+      outline: none;
+      border-color: $purple;
+      box-shadow: 0 0 0 3px rgba($purple, 0.15);
+    }
+
+    &::placeholder {
+      color: $text-muted;
+    }
+  }
+
+  select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%239aa0a6' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 36px;
+    cursor: pointer;
+  }
+}
+
+// Code secret input
+input[name="code_secret"] {
+  letter-spacing: 8px;
+  text-align: center;
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+// ==========================================
+// Buttons
+// ==========================================
+.btn-submit {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: $r-md;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+
+  // Dépôt / Submit par défaut = Vert
+  background: $green;
+  color: $text-on-accent;
+  box-shadow: 0 4px 15px rgba($green, 0.25);
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba($green, 0.35);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+// Bouton retrait = Rouge
+.btn-retrait {
+  background: $red;
+  color: #fff;
+  box-shadow: 0 4px 15px rgba($red, 0.25);
+
+  &:hover {
+    box-shadow: 0 6px 20px rgba($red, 0.35);
+  }
+}
+
+// Bouton transfert = Bleu
+.btn-transfert {
+  background: $blue;
+  color: #fff;
+  box-shadow: 0 4px 15px rgba($blue, 0.25);
+
+  &:hover {
+    box-shadow: 0 6px 20px rgba($blue, 0.35);
+  }
+}
+
+// ==========================================
+// Alerts
+// ==========================================
+.alert-message {
+  padding: 12px 16px;
+  border-radius: $r-md;
+  margin-bottom: 16px;
+  font-weight: 500;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  &.error {
+    background: rgba($red, 0.1);
+    color: $red;
+    border: 1px solid rgba($red, 0.25);
+  }
+
+  &.success {
+    background: rgba($green, 0.1);
+    color: $green;
+    border: 1px solid rgba($green, 0.25);
+  }
+}
+
+// ==========================================
+// Tables
+// ==========================================
+table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th,
+  td {
+    padding: 12px 14px;
+    text-align: left;
+    border-bottom: 1px solid $border;
+  }
+
+  th {
+    background: $bg-elevated;
+    font-weight: 700;
+    color: $text-muted;
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    letter-spacing: 0.8px;
+  }
+
+  td {
+    color: $text-primary;
+    font-size: 0.9rem;
+  }
+
+  tbody tr {
+    transition: background 0.15s;
+
+    &:hover {
+      background: $bg-hover;
+    }
+  }
+
+  // Colonne montant positive/négative
+  td:nth-child(3) {
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  td:nth-child(4) {
+    color: $gold;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+// ==========================================
+// Section Cards (admin)
+// ==========================================
+.info-card,
+.gains-card,
+.comptes-card,
+.prefixe-card,
+.prefixe-list-card,
+.bareme-form-card,
+.bareme-list-card {
+  width: 100%;
+}
+
+// Gains highlight
+.gains-card .card p {
+  font-size: 1rem;
+  padding: 6px 0;
+
+  &:last-child {
+    color: $gold;
+    font-weight: 700;
+    font-size: 1.1rem;
+    border-top: 1px solid $border;
+    padding-top: 12px;
+    margin-top: 4px;
+  }
+}
+
+// Tranches grid (baremes)
+.tranches {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding: 12px;
+  background: $bg-elevated;
+  border-radius: $r-md;
+  border: 1px solid $border;
+}
+
+// ==========================================
+// Table actions
+// ==========================================
+td a {
+  color: $blue;
+  font-weight: 500;
+  font-size: 0.85rem;
+
+  &:hover {
+    text-decoration: underline;
+  }
+
+  & + a {
+    color: $red;
+    margin-left: 10px;
+  }
+}
+
+// ==========================================
+// Login Page
+// ==========================================
+.login-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 400px;
+  background: $bg-surface;
+  border: 1px solid $border;
+  border-radius: $r-xl;
+  padding: 40px 30px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.4);
+  text-align: center;
+
+  .login-logo {
+    font-size: 2rem;
+    font-weight: 800;
+    color: $green;
+    margin-bottom: 8px;
+    letter-spacing: 1px;
+  }
+
+  .login-subtitle {
+    color: $text-muted;
+    font-size: 0.9rem;
+    margin-bottom: 32px;
+  }
+
+  .login-form {
+    text-align: left;
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .btn-submit {
+      margin-top: 8px;
+    }
+  }
+}
+
+// ==========================================
+// Admin header bar
+// ==========================================
+.admin-nav-card .card {
+  padding: 12px;
+}
+
+// ==========================================
+// H4 inside sections
+// ==========================================
+h4 {
+  color: $text-primary;
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+// ==========================================
+// Empty state
+// ==========================================
+td[colspan] {
+  color: $text-muted;
+  text-align: center;
+  font-style: italic;
+}
+
+// ==========================================
+// Grid rows (side-by-side cards)
+// ==========================================
+.grid-row {
+  display: grid;
+  gap: 20px;
+  width: 100%;
+
+  &.grid-2 {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  &.grid-3-7 {
+    grid-template-columns: 3fr 7fr;
+  }
+
+  &.grid-7-3 {
+    grid-template-columns: 7fr 3fr;
+  }
+
+  // Full width child inside grid
+  > .full-width {
+    grid-column: 1 / -1;
+  }
+}
+
+// ==========================================
+// Animation
+// ==========================================
+@keyframes rotate {
+  0% {
+    transform: translate(-25em, -15em);
+  }
+  20% {
+    transform: translate(25em, 15em);
+  }
+  100% {
+    transform: translate(25em, 15em);
+  }
+}
+
+// ==========================================
+// Responsive
+// ==========================================
+@media (max-width: 520px) {
+  .central-div {
+    padding: 12px;
+    gap: 16px;
+  }
+
+  .card {
+    padding: 16px;
+    border-radius: $r-md;
+  }
+
+  .op-nav {
+    flex-direction: column;
+
+    .op-link {
+      text-align: center;
+    }
+  }
+
+  .tranches {
+    grid-template-columns: 1fr;
+  }
+
+  .login-card {
+    padding: 28px 20px;
+  }
+
+  table {
+    font-size: 0.8rem;
+
+    th, td {
+      padding: 8px 10px;
+    }
+  }
+
+  .sold-card .main-container {
+    height: 180px;
+  }
+
+  .grid-row {
+    &.grid-2,
+    &.grid-3-7,
+    &.grid-7-3 {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+@media (min-width: 521px) and (max-width: 768px) {
+  .tranches {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+}

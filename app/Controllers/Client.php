@@ -3,14 +3,17 @@
 namespace App\Controllers;
 
 use App\Service\ClientService;
+use App\Service\OperationService;
 
 class Client extends BaseController
 {
     private $clientService;
-
+    private $operationService;
+    
     public function __construct()
     {
         $this->clientService = new ClientService();
+        $this->operationService = new OperationService();
     }
 
     public function dashboard(): string
@@ -19,8 +22,11 @@ class Client extends BaseController
 
         $data = [
             'solde'      => $id_client ? $this->clientService->getSolde($id_client) : 0,
-            'monnaie'    => 'FC',
+            'monnaie'    => 'Ar',
+            'nom' => $id_client ? $this->clientService->getClientDetails($id_client)['nom'] : '',
+            'prenom' => '',
             'operations' => $id_client ? $this->clientService->getOperations($id_client) : [],
+            'frais'     => $id_client ? $this->operationService->getAllFraisTranches() : []
         ];
 
         return view('user/dahsboard', $data);

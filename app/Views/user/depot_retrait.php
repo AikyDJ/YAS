@@ -1,46 +1,54 @@
-<div class="depot-retrait-container" style="padding: 15px;">
-    <h4 style="margin-top: 0; margin-bottom: 20px; color: #333;">Faire un Dépôt / Retrait</h4>
-
+<div class="depot-retrait-container">
+    <h4>Dépôt / Retrait</h4>
 
     <?php if (session()->getFlashdata('error')): ?>
-        <div class="alert-message error" style="background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 4px; margin-bottom: 15px; border: 1px solid #f5c6cb;">
+        <div class="alert-message error">
             <?= session()->getFlashdata('error') ?>
         </div>
     <?php endif; ?>
 
     <?php if (session()->getFlashdata('success')): ?>
-        <div class="alert-message success" style="background-color: #d4edda; color: #155724; padding: 10px; border-radius: 4px; margin-bottom: 15px; border: 1px solid #c3e6cb;">
+        <div class="alert-message success">
             <?= session()->getFlashdata('success') ?>
         </div>
     <?php endif; ?>
 
-
-    <form action="<?= base_url('client/proceder-operation') ?>" method="POST">
+    <form action="<?= base_url('client/proceder-operation') ?>" method="POST" id="form-operation">
         <?= csrf_field() ?>
 
-
-        <div class="form-group" style="margin-bottom: 15px;">
-            <label for="type_operation" style="display: block; margin-bottom: 5px; font-weight: bold; color: #555;">Action :</label>
-            <select name="type_operation" id="type_operation" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;">
+        <div class="form-group">
+            <label for="type_operation">Action</label>
+            <select name="type_operation" id="type_operation" required>
                 <option value="depot">Dépôt</option>
                 <option value="retrait">Retrait</option>
             </select>
         </div>
 
-
-        <div class="form-group" style="margin-bottom: 20px;">
-            <label for="montant" style="display: block; margin-bottom: 5px; font-weight: bold; color: #555;">Montant à déplacer :</label>
-            <input type="number" name="montant" id="montant" min="1" step="any" placeholder="Ex d'équivalent : 5000" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; box-sizing: border-box;">
+        <div class="form-group">
+            <label for="montant">Montant (Ar)</label>
+            <input type="number" name="montant" id="montant" min="1" step="any" placeholder="5 000" required>
         </div>
 
-
-        <div class="form-group" style="margin-bottom: 20px;">
-            <label for="code_secret" style="display: block; margin-bottom: 5px; font-weight: bold; color: #555;">Code Secret (4 chiffres) :</label>
-            <input type="password" name="code_secret" id="code_secret" maxlength="4" pattern="[0-9]{4}" placeholder="••••" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; box-sizing: border-box; letter-spacing: 5px; text-align: center;">
+        <div class="fee-preview" id="fee-preview" style="display:none;">
+            <div class="fee-row">
+                <span>Montant</span>
+                <span id="fee-montant">0 Ar</span>
+            </div>
+            <div class="fee-row">
+                <span>Frais (<span id="fee-pct">0</span>%)</span>
+                <span id="fee-amount" class="fee-cost">0 Ar</span>
+            </div>
+            <div class="fee-row fee-total">
+                <span>Total à payer</span>
+                <span id="fee-total">0 Ar</span>
+            </div>
         </div>
 
-        <button type="submit" class="btn-submit" style="width: 100%; background-color: #007bff; color: white; border: none; padding: 12px; border-radius: 4px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.2s;">
-            Confirmer l'opération
-        </button>
+        <div class="form-group">
+            <label for="code_secret">Code Secret</label>
+            <input type="password" name="code_secret" id="code_secret" maxlength="4" pattern="[0-9]{4}" placeholder="••••" required>
+        </div>
+
+        <button type="submit" class="btn-submit" id="btn-operation">Confirmer le dépôt</button>
     </form>
 </div>

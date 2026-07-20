@@ -1,30 +1,33 @@
 <!DOCTYPE html>
-<html lang="en"
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Connexion</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion - YAS Mobile</title>
+    <link rel="stylesheet" href="<?= base_url('css/style.css') ?>">
 </head>
 <body>
+    <div class="login-wrapper">
+        <div class="login-card">
+            <div class="login-logo">YAS</div>
+            <p class="login-subtitle">Mobile Money</p>
 
-<h2>Connexion</h2>
+            <form action="<?= base_url('/auth') ?>" method="POST" class="login-form">
+                <?= csrf_field() ?>
 
-<form action="<?= base_url('/auth') ?>" method="POST">
-    <div>
-        <label for="telephone">Numéro de téléphone :</label>
-        <input type="text" name="telephone" id="telephone" required>
+                <div class="form-group">
+                    <label for="telephone">Numéro de téléphone</label>
+                    <input type="text" name="telephone" id="telephone" placeholder="033xx..." required>
+                </div>
+
+                <div class="form-group">
+                    <label for="code_secret">Code Secret</label>
+                    <input type="password" name="code_secret" id="code_secret" maxlength="4" pattern="[0-9]{4}" placeholder="••••" required>
+                </div>
+
+                <button type="submit" class="btn-submit">Se connecter</button>
+            </form>
+        </div>
     </div>
-
-    <br>
-
-    <div>
-        <label for="code_secret">Code secret :</label>
-        <input type="password" name="code_secret" id="code_secret" maxlength="4" required>
-    </div>
-
-    <br>
-
-    <button type="submit">Se connecter</button>
-</form>
-
 </body>
 </html>
