@@ -9,7 +9,7 @@ class Client extends BaseController
 {
     private $clientService;
     private $operationService;
-    
+
     public function __construct()
     {
         $this->clientService = new ClientService();
@@ -19,12 +19,13 @@ class Client extends BaseController
     public function dashboard(): string
     {
         $id_client = session()->get('id_client');
-
+        $client = $id_client ? $this->clientService->getClientOperateurById($id_client) : null;
         $data = [
             'solde'      => $id_client ? $this->clientService->getSolde($id_client) : 0,
             'monnaie'    => 'Ar',
-            'nom' => $id_client ? $this->clientService->getClientDetails($id_client)['nom'] : '',
-            'prenom' => '',
+            'nom' => $client ? $client['nom'] : '',
+            'code_client' => $client ? '+261'. $client['code_operateur'] . $client['code_client'] : '',
+            'prenom' => $client ? $client['prenom'] : '',
             'operations' => $id_client ? $this->clientService->getOperations($id_client) : [],
             'frais'     => $id_client ? $this->operationService->getAllFraisTranches() : []
         ];

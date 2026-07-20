@@ -6,6 +6,7 @@ use App\Models\Client;
 use App\Models\Operation;
 use App\Models\Typeoperation;
 use App\Models\Fraitbarem;
+use App\Models\Views\Clientoperateur;
 use App\Models\Views\Operationclient;
 use App\Models\Views\Soldeclient;
 use App\Models\Views\Soldeclienthistorique;
@@ -16,6 +17,8 @@ class ClientService
     private $operationModel;
     private $typeOperationModel;
     private $fraisBaremModel;
+
+    private $clientOperateurModel;
     private $soldeClientModel;
     private $operationClientModel;
     private $soldeHistoriqueModel;
@@ -28,6 +31,7 @@ class ClientService
         $this->fraisBaremModel    = new Fraitbarem();
         $this->soldeClientModel   = new Soldeclient();
         $this->operationClientModel = new Operationclient();
+        $this->clientOperateurModel = new Clientoperateur();
         $this->soldeHistoriqueModel = new Soldeclienthistorique();
     }
 
@@ -48,7 +52,13 @@ class ClientService
     {
         return $this->clientModel->find($id);
     }
-
+    // get client operateur by id
+    public function getClientOperateurById(int $id): ?array
+    {
+        return $this->clientOperateurModel
+            ->where('id_client', $id)
+            ->first();
+    }
     /**
      * Récupère le solde actuel d'un client via la vue v_solde_client.
      */
