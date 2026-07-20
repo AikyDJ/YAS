@@ -8,7 +8,7 @@
 
 <h2>Connexion</h2>
 
-<form action="" method="POST">
+<form action="<?= base_url('/auth') ?>" method="POST">
     <div>
         <label for="telephone">Numéro de téléphone :</label>
         <input type="text" name="telephone" id="telephone" required>

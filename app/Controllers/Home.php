@@ -1,22 +1,39 @@
 <?php
 
 namespace App\Controllers;
+use App\Service\AuthService;
 
 class Home extends BaseController
 {
+    private AuthService $authService;
+
+    public function __construct()
+    {
+        $this->authService = new AuthService();
+    }
+
     public function index()
     {
-        if ($this->request->getMethod() === 'post') {
+        return view('index');
+    }
+
+    public function auth(){
             $telephone  = $this->request->getPost('telephone');
             $codeSecret = $this->request->getPost('code_secret');
 
-            // TODO: vérifier identifiants en BDD
-            // Si admin → redirect admin/dashboard
-            // Si client → redirect client/dashboard
+            $authResult = $this->authService->authenticate($telephone, $codeSecret);
 
-            return redirect()->to('/client/dashboard');
-        }
+            if ($authResult) {
+                session()->set('id_client', $authResult['id']);
+                return redirect()->to('/client/dashboard');
+            } else {
+                return redirect()->to('/')->with('error', 'Identifiants invalides');
+            }
+    }
 
-        return view('index');
+    public function logout()
+    {
+        session()->remove('id_client');
+        return redirect()->to('/');
     }
 }
