@@ -79,7 +79,7 @@ WITH mouvements AS (
         o.id_primary_client AS id_client,
         CASE
             WHEN LOWER(t.nom) = 'depot' THEN o.montant
-            WHEN LOWER(t.nom) IN ('retrait', 'transfaire') THEN -o.montant - o.montant_frais
+            WHEN LOWER(t.nom) IN ('retrait', 'transfaire') THEN -o.montant - o.montant_frais - o.montant_comission
             ELSE 0
         END AS mouvement
     FROM operation o
@@ -117,7 +117,7 @@ WITH mouvements AS (
         o.id_primary_client AS id_client,
         CASE
             WHEN LOWER(t.nom) = 'depot' THEN o.montant
-            WHEN LOWER(t.nom) IN ('retrait', 'transfaire') THEN -o.montant - o.montant_frais
+            WHEN LOWER(t.nom) IN ('retrait', 'transfaire') THEN -o.montant - o.montant_frais - o.montant_comission
             ELSE 0
         END AS mouvement
     FROM operation o

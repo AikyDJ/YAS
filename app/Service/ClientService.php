@@ -6,6 +6,7 @@ use App\Models\Client;
 use App\Models\Operation;
 use App\Models\Typeoperation;
 use App\Models\Fraitbarem;
+use App\Models\Operateur;
 use App\Models\Views\Clientoperateur;
 use App\Models\Views\Operationclient;
 use App\Models\Views\Soldeclient;
@@ -17,7 +18,7 @@ class ClientService
     private $operationModel;
     private $typeOperationModel;
     private $fraisBaremModel;
-
+    private $operateurModel;
     private $clientOperateurModel;
     private $soldeClientModel;
     private $operationClientModel;
@@ -28,6 +29,7 @@ class ClientService
         $this->clientModel = new Client();
         $this->operationModel = new Operation();
         $this->typeOperationModel = new Typeoperation();
+        $this->operateurModel = new Operateur();
         $this->fraisBaremModel = new Fraitbarem();
         $this->soldeClientModel = new Soldeclient();
         $this->operationClientModel = new Operationclient();
@@ -119,7 +121,7 @@ class ClientService
     }
 
     /**
-     * Calcule les frais根据 le montant et la bareme.
+     * Calcule les frais selon le montant et la bareme.
      */
     public function calculerFrais(float $montant): float
     {
@@ -201,6 +203,11 @@ class ClientService
             if (!$destinataire) {
                 $result = ['success' => false, 'message' => 'Destinataire introuvable.'];
             }
+            // verifier detinater meme operateur
+            $emetteur = $this->getClientById($id_emetteur);
+            if ($emetteur && $destinataire && $emetteur['id_operateur'] !== $destinataire['id_operateur']) {
+                $result = ['success' => false, 'message' => 'Le destinataire doit être du même opérateur.'];
+            }
 
             if ((int) $destinataire['id'] === $id_emetteur) {
                 $result = ['success' => false, 'message' => 'Vous ne pouvez pas vous transférer à vous-même.'];
@@ -213,8 +220,9 @@ class ClientService
 
             $solde = $this->getSolde($id_emetteur);
             $frais = $this->calculerFrais($montant);
+            $comission = $this->calculerComission($montant, $emetteur['id_operateur'], $destinataire['id_operateur']);
 
-            if (($montant + $frais) > $solde) {
+            if (($montant + $frais + $comission) > $solde) {
                 $result = ['success' => false, 'message' => 'Solde insuffisant pour ce transfert.'];
             }
 
@@ -224,6 +232,7 @@ class ClientService
                 'id_type_operation' => $type_id,
                 'montant' => $montant,
                 'montant_frais' => $frais,
+                'montant_comission' => $comission,
                 'date_operation' => date('Y-m-d'),
             ];
 
@@ -232,5 +241,14 @@ class ClientService
             $result = ['success' => false, 'message' => 'Erreur lors du transfert : ' . $e->getMessage()];
         }
         return $result;
+    }
+    public function calculerComission(float $montant, int $id_emetteur, int $id_destinataire): float
+    {
+        if ($id_emetteur !== $id_destinataire) {
+            $destinataireOperateur = $this->operateurModel->find($id_destinataire);
+            return $montant * $destinataireOperateur['comission_ptc'];
+            }
+            return 0.0;
+
     }
 }
