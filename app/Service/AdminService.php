@@ -16,16 +16,14 @@ class AdminService{
     public function getSituationGain(){
         $db = \Config\Database::connect();
 
-        $totalFrais = $db->table('v_operation_client v')
-            ->select('v.nom_client_primaire, v.prenom_client_primaire, v.type_operation, SUM(v.montant_frais) AS total_frais, COUNT(v.id_operation) AS nb_operations')
-            ->groupBy('v.id_client_primaire, v.type_operation')
-            ->get()
-            ->getResultArray();
+        $totalFrais = $db->table('operation o')
+            ->select('c.nom, c.prenom, o.id_type_operation, t.nom AS type_op, SUM(o.montant_frais) AS total_frais, COUNT(o.id) AS nb_operations')
+            ->join('client c', 'c.id = o.id_primary_client')
+            ->join('type_operation t', 't.id = o.id_type_operation')
+            ->groupBy('c.id, o.id_type_operation')->get()->getResultArray();
 
-        $gainsTotal = $db->table('v_operation_client')
-            ->select('SUM(montant_frais) AS total_gains')
-            ->get()
-            ->getRowArray();
+        $gainsTotal = $db->table('operation')
+            ->select('SUM(montant_frais) AS total_gains')->get()->getRowArray();
 
         return [
             'par_client'  => $totalFrais,
@@ -50,25 +48,8 @@ class AdminService{
         return ['success' => true, 'message' => 'Préfixe ajouté.'];
     }
 
-    public function createFraisTranche($data){
+    public function createFraisTranche(){
         $db = \Config\Database::connect();
-
-        $exists = $db->table('frais_barem')
-            ->where('min_montant <=', $data['max_montant'])
-            ->where('max_montant >=', $data['min_montant'])
-            ->countAllResults();
-
-        if($exists > 0){
-            return ['success' => false, 'message' => 'Chevauchement avec une tranche existante.'];
-        }
-
-        $db->table('frais_barem')->insert([
-            'montant'     => $data['montant'],
-            'min_montant' => $data['min_montant'],
-            'max_montant' => $data['max_montant'],
-        ]);
-
-        return ['success' => true, 'message' => 'Tranche de frais créée.'];
     }
 
 
