@@ -43,3 +43,4 @@ app/Config/Database.php
 *.xml
 /.idea
 *.xml
+*.xml

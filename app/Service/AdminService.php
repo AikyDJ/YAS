@@ -75,14 +75,14 @@ class AdminService
         ];
     }
 
-    private function safeTableRows(string $table, ?callable $normalizer = null, string $orderBy = ''): array
+    private function safeTableRows(string $orderBy = ''): array
     {
         $db = $this->db();
         $rows = [];
 
-        if ($this->tableExists($db, $table)) {
+        if ($this->tableExists($db, 'type_operation')) {
             try {
-                $builder = $db->table($table);
+                $builder = $db->table('type_operation');
 
                 if ($orderBy !== '') {
                     $builder->orderBy($orderBy);
@@ -90,12 +90,12 @@ class AdminService
 
                 $rows = $builder->get()->getResultArray();
             } catch (Throwable $exception) {
-                $rows = [];
+                $rows = null;
             }
         }
 
-        if ($normalizer !== null && !empty($rows)) {
-            $rows = array_map($normalizer, $rows);
+        if (!empty($rows)) {
+            $rows = array_map(null, $rows);
         }
 
         return $rows;
@@ -269,7 +269,7 @@ class AdminService
         $nom    = trim((string) ($data['nom'] ?? ''));
 
         if (!$this->tableExists($db, 'operateur')) {
-            $message = 'Base de données non initialisée.';
+            $message = 'Erreur de base';
         } elseif (!preg_match('/^\d{2,3}$/', $prefix)) {
             $message = 'Préfixe invalide.';
         } else {
@@ -310,7 +310,7 @@ class AdminService
         $db = $this->db();
 
         if (!$this->tableExists($db, 'frais_barem')) {
-            return ['success' => false, 'message' => 'Base de données non initialisée.'];
+            return ['success' => false, 'message' => 'Erreur dans la base'];
         }
 
         try {
@@ -324,7 +324,7 @@ class AdminService
             }
             $db->table('frais_barem')->insert($values);
         } catch (Throwable $exception) {
-            return ['success' => false, 'message' => 'Impossible d\'enregistrer le barème.'];
+            return ['success' => false, 'message' => 'Barème Non enregistré.'];
         }
 
         return ['success' => true, 'message' => 'Barème enregistré.'];
@@ -332,7 +332,7 @@ class AdminService
 
     public function getTypeOperations(): array
     {
-        return $this->safeTableRows('type_operation', null, 'code_type_operation ASC');
+        return $this->safeTableRows('code_type_operation ASC');
     }
 
     public function saveTypeOperation(array $data): array
