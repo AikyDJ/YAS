@@ -257,6 +257,7 @@ class ClientService
             $this->operationModel->insert($data);
         } catch (\Exception $e) {
             $result = ['success' => false, 'message' => 'Erreur lors du transfert : ' . $e->getMessage()];
+            throw $e;
         }
         return $result;
     }
@@ -278,97 +279,101 @@ class ClientService
      * @param string $code_secret   Code secret de l'émetteur
      * @param float  $montant       Montant total pour tous les transferts
      */
-    public function insertMultipleTransferts(int $id_emetteur, array $destinataires, string $code_secret,float $montant): array
+    public function insertMultipleTransferts(int $id_emetteur, array $destinataires, string $code_secret, float $montant): array
     {
-        $msg = ['success' => false, 'message' => 'Erreur lors du transfert.'];
-        if (!$this->verifyCodeSecret($id_emetteur, $code_secret)) {
-            $msg = ['success' => false, 'message' => 'Code secret incorrect.'];
-            throw new \Exception('Code secret incorrect.');
-        }
+        try {
+            $msg = ['success' => false, 'message' => 'Erreur lors du transfert.'];
+            if (!$this->verifyCodeSecret($id_emetteur, $code_secret)) {
+                $msg = ['success' => false, 'message' => 'Code secret incorrect.'];
+                throw new \Exception('Code secret incorrect.');
+            }
 
-        if (empty($destinataires)) {
-            $msg = ['success' => false, 'message' => 'Aucun destinataire fourni.'];
-            throw new \Exception('Aucun destinataire fourni.');
-        }
+            if (empty($destinataires)) {
+                $msg = ['success' => false, 'message' => 'Aucun destinataire fourni.'];
+                throw new \Exception('Aucun destinataire fourni.');
+            }
 
-        $emetteur = $this->getClientById($id_emetteur);
-        if (!$emetteur) {
-            $msg = ['success' => false, 'message' => 'Client émetteur introuvable.'];
-            throw new \Exception('Client émetteur introuvable.');
-        }
+            $emetteur = $this->getClientById($id_emetteur);
+            if (!$emetteur) {
+                $msg = ['success' => false, 'message' => 'Client émetteur introuvable.'];
+                throw new \Exception('Client émetteur introuvable.');
+            }
 
-        $id_operateur_emetteur = (int) $emetteur['id_operateur'];
-        $type_id = $this->getTypeOperationId('transfaire');
-        if ($type_id === null) {
-            $msg = ['success' => false, 'message' => 'Type d\'opération inconnu.'];
-            throw new \Exception('Type d\'opération inconnu.');
-        }
+            $id_operateur_emetteur = (int) $emetteur['id_operateur'];
+            $type_id = $this->getTypeOperationId('transfaire');
+            if ($type_id === null) {
+                $msg = ['success' => false, 'message' => 'Type d\'opération inconnu.'];
+                throw new \Exception('Type d\'opération inconnu.');
+            }
 
-        $results = [];
-        $db = $this->operationModel->db();
-        $db->transStart();
+            $results = [];
+            $db = $this->operationModel->db();
+            $db->transStart();
             $montant = $montant / (int) count($destinataires);
 
-        foreach ($destinataires as $i => $dest) {
-            $code_dest = preg_replace('/\D/', '', $dest['code_client'] ?? '');
-            if (strlen($code_dest) === 10 && $code_dest[0] === '0') {
-                $code_dest = substr($code_dest, 3);
+            foreach ($destinataires as $i => $dest) {
+                $code_dest = preg_replace('/\D/', '', $dest['code_client'] ?? '');
+                if (strlen($code_dest) === 10 && $code_dest[0] === '0') {
+                    $code_dest = substr($code_dest, 3);
+                }
+
+                $destinataire = $this->getClientDetails($code_dest);
+                if (!$destinataire) {
+                    $results[] = ['index' => $i, 'success' => false, 'message' => "Destinataire #$code_dest introuvable."];
+                    continue;
+                }
+
+                if ((int) $destinataire['id'] === $id_emetteur) {
+                    $results[] = ['index' => $i, 'success' => false, 'message' => "Impossible de se transférer à soi-même."];
+                    continue;
+                }
+
+                if ((int) $destinataire['id_operateur'] !== $id_operateur_emetteur) {
+                    $results[] = ['index' => $i, 'success' => false, 'message' => "Destinataire #$code_dest n'est pas du même opérateur."];
+                    continue;
+                }
+
+                if ($montant <= 0) {
+                    $results[] = ['index' => $i, 'success' => false, 'message' => "Montant invalide pour le destinataire #$code_dest."];
+                    continue;
+                }
+
+                $frais = $this->calculerFrais($montant);
+                $comission = $this->calculerComission($montant, $id_operateur_emetteur, (int) $destinataire['id_operateur']);
+
+                $solde = $this->getSolde($id_emetteur);
+                if (($montant + $frais + $comission) > $solde) {
+                    $results[] = ['index' => $i, 'success' => false, 'message' => "Solde insuffisant pour le transfert #$code_dest."];
+                    continue;
+                }
+
+                $data = [
+                    'id_primary_client' => $id_emetteur,
+                    'id_secondary_client' => (int) $destinataire['id'],
+                    'id_type_operation' => $type_id,
+                    'montant' => $montant,
+                    'montant_frais' => $frais,
+                    'montant_comission' => $comission,
+                    'date_operation' => date('Y-m-d'),
+                ];
+
+                $this->operationModel->insert($data);
+                $results[] = ['index' => $i, 'success' => true, 'message' => "Transfert de $montant Ar vers #$code_dest effectué."];
             }
 
-            $destinataire = $this->getClientDetails($code_dest);
-            if (!$destinataire) {
-                $results[] = ['index' => $i, 'success' => false, 'message' => "Destinataire #$code_dest introuvable."];
-                continue;
-            }
+            $db->transComplete();
 
-            if ((int) $destinataire['id'] === $id_emetteur) {
-                $results[] = ['index' => $i, 'success' => false, 'message' => "Impossible de se transférer à soi-même."];
-                continue;
-            }
+            $allSuccess = empty(array_filter($results, fn($r) => !$r['success']));
 
-            if ((int) $destinataire['id_operateur'] !== $id_operateur_emetteur) {
-                $results[] = ['index' => $i, 'success' => false, 'message' => "Destinataire #$code_dest n'est pas du même opérateur."];
-                continue;
-            }
-
-            if ($montant <= 0) {
-                $results[] = ['index' => $i, 'success' => false, 'message' => "Montant invalide pour le destinataire #$code_dest."];
-                continue;
-            }
-
-            $frais = $this->calculerFrais($montant);
-            $comission = $this->calculerComission($montant, $id_operateur_emetteur, (int) $destinataire['id_operateur']);
-
-            $solde = $this->getSolde($id_emetteur);
-            if (($montant + $frais + $comission) > $solde) {
-                $results[] = ['index' => $i, 'success' => false, 'message' => "Solde insuffisant pour le transfert #$code_dest."];
-                continue;
-            }
-
-            $data = [
-                'id_primary_client' => $id_emetteur,
-                'id_secondary_client' => (int) $destinataire['id'],
-                'id_type_operation' => $type_id,
-                'montant' => $montant,
-                'montant_frais' => $frais,
-                'montant_comission' => $comission,
-                'date_operation' => date('Y-m-d'),
+            return [
+                'success' => $allSuccess,
+                'message' => $allSuccess
+                    ? 'Tous les transferts ont été effectués.'
+                    : 'Certains transferts ont échoué.',
+                'results' => $results,
             ];
-
-            $this->operationModel->insert($data);
-            $results[] = ['index' => $i, 'success' => true, 'message' => "Transfert de $montant Ar vers #$code_dest effectué."];
+        } catch (\Exception $e) {
+            return ['success' => false, 'message' => 'Erreur lors du transfert : ' . $e->getMessage()];
         }
-
-        $db->transComplete();
-
-        $allSuccess = empty(array_filter($results, fn($r) => !$r['success']));
-
-        return [
-            'success' => $allSuccess,
-            'message' => $allSuccess
-                ? 'Tous les transferts ont été effectués.'
-                : 'Certains transferts ont échoué.',
-            'results' => $results,
-        ];
     }
 }

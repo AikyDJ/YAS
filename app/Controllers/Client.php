@@ -91,10 +91,7 @@ class Client extends BaseController
             return redirect()->to('/client/dashboard')->with('success', $result['message']);
         }
 
-        $errors = array_column(array_filter($result['r                <div class="form-group">
-                    <label>Montant (Ar)</label>
-                    <input type="number" name="destinataires[0][montant]" min="1" step="any" placeholder="5 000" required class="montant-input">
-                </div>esults']), 'message');
+        $errors = array_column(array_filter($result['results']), 'message');
         $msg = !empty($errors) ? implode(' ', $errors) : $result['message'];
         return redirect()->to('/client/dashboard')->with('error', $msg);
     }
