@@ -163,11 +163,13 @@ class ClientService
 
             if (!$this->verifyCodeSecret($id_client, $code_secret)) {
                 $result = ['error' => true, 'message' => 'Code secret incorrect.'];
+                throw new \Exception('Code secret incorrect.');
             }
 
             $type_id = $this->getTypeOperationId($type_nom);
             if ($type_id === null) {
                 $result = ['error' => true, 'message' => 'Type d\'opération inconnu.'];
+                throw new \Exception('Type d\'opération inconnu.');
             }
 
             $solde = $this->getSolde($id_client);
@@ -175,6 +177,7 @@ class ClientService
 
             if (strtolower($type_nom) === 'retrait' && ($montant + $frais) > $solde) {
                 $result = ['error' => true, 'message' => 'Solde insuffisant pour ce retrait.'];
+                throw new \Exception('Solde insuffisant pour ce retrait.');
             }
 
             $data = [
@@ -204,7 +207,8 @@ class ClientService
 
 
             if ($montant <= 0 || !$this->verifyCodeSecret($id_emetteur, $code_secret)) {
-                return ['error' => true, 'message' => 'Montant ou code secret incorrect.'];
+                $result = ['error' => true, 'message' => 'Montant ou code secret incorrect.'];
+                throw new \Exception('Montant ou code secret incorrect.');
             }
 
             $code_destinataire = preg_replace('/\D/', '', $code_destinataire);
@@ -214,18 +218,21 @@ class ClientService
             $destinataire = $this->getClientDetails($code_destinataire);
             if (!$destinataire) {
                 $result = ['error' => true, 'message' => 'Destinataire introuvable.'];
+                throw new \Exception('Destinataire introuvable.');
             }
             // verifier detinater meme operateur
             $emetteur = $this->getClientById($id_emetteur);
 
 
             if ((int) $destinataire['id'] === $id_emetteur) {
-                return ['error' => true, 'message' => 'Vous ne pouvez pas vous transférer à vous-même.'];
+                $result = ['error' => true, 'message' => 'Vous ne pouvez pas vous transférer à vous-même.'];
+                throw new \Exception('Vous ne pouvez pas vous transférer à vous-même.');
             }
 
             $type_id = $this->getTypeOperationId('transfaire');
             if ($type_id === null) {
-                return ['error' => true, 'message' => 'Type d\'opération inconnu.'];
+                $result = ['error' => true, 'message' => 'Type d\'opération inconnu.'];
+                throw new \Exception('Type d\'opération inconnu.');
             }
 
             $solde = $this->getSolde($id_emetteur);
@@ -234,6 +241,7 @@ class ClientService
 
             if (($montant + $frais + $comission) > $solde) {
                 $result = ['error' => true, 'message' => 'Solde insuffisant pour ce transfert.'];
+                throw new \Exception('Solde insuffisant pour ce transfert.');
             }
 
             $data = [
@@ -261,20 +269,106 @@ class ClientService
         return 0.0;
     }
 
-    // insetion multiple transactions
-    public function insertMultipleOperations(int $id_client, array $operations, float $montant): array
+    /**
+     * Insère plusieurs transferts en une seule opération.
+     * Tous les destinataires doivent être du même opérateur que l'émetteur.
+     *
+     * @param int    $id_emetteur   ID du client émetteur
+     * @param array  $destinataires [['code_client' => '033...', 'montant' => 5000], ...]
+     * @param string $code_secret   Code secret de l'émetteur
+     * @param float  $montant       Montant total pour tous les transferts
+     */
+    public function insertMultipleTransferts(int $id_emetteur, array $destinataires, string $code_secret,float $montant): array
     {
+        $msg = ['success' => false, 'message' => 'Erreur lors du transfert.'];
+        if (!$this->verifyCodeSecret($id_emetteur, $code_secret)) {
+            $msg = ['success' => false, 'message' => 'Code secret incorrect.'];
+            throw new \Exception('Code secret incorrect.');
+        }
+
+        if (empty($destinataires)) {
+            $msg = ['success' => false, 'message' => 'Aucun destinataire fourni.'];
+            throw new \Exception('Aucun destinataire fourni.');
+        }
+
+        $emetteur = $this->getClientById($id_emetteur);
+        if (!$emetteur) {
+            $msg = ['success' => false, 'message' => 'Client émetteur introuvable.'];
+            throw new \Exception('Client émetteur introuvable.');
+        }
+
+        $id_operateur_emetteur = (int) $emetteur['id_operateur'];
+        $type_id = $this->getTypeOperationId('transfaire');
+        if ($type_id === null) {
+            $msg = ['success' => false, 'message' => 'Type d\'opération inconnu.'];
+            throw new \Exception('Type d\'opération inconnu.');
+        }
+
         $results = [];
-        $partMontant = $montant / count($operations);
-        foreach ($operations as $op) {
-            $destinataire = $this->verificationDetiataire($id_client, $op['code_secret']);
-            if (isset($destinataire['error'])) {
-                $results[] = $destinataire;
+        $db = $this->operationModel->db();
+        $db->transStart();
+            $montant = $montant / (int) count($destinataires);
+
+        foreach ($destinataires as $i => $dest) {
+            $code_dest = preg_replace('/\D/', '', $dest['code_client'] ?? '');
+            if (strlen($code_dest) === 10 && $code_dest[0] === '0') {
+                $code_dest = substr($code_dest, 3);
+            }
+
+            $destinataire = $this->getClientDetails($code_dest);
+            if (!$destinataire) {
+                $results[] = ['index' => $i, 'success' => false, 'message' => "Destinataire #$code_dest introuvable."];
                 continue;
             }
-            $results[] = $this->insertTransfert($id_client, $destinataire['destinataire'], $partMontant, $op['code_secret']);
-        }
-        return $results;
-    }
 
+            if ((int) $destinataire['id'] === $id_emetteur) {
+                $results[] = ['index' => $i, 'success' => false, 'message' => "Impossible de se transférer à soi-même."];
+                continue;
+            }
+
+            if ((int) $destinataire['id_operateur'] !== $id_operateur_emetteur) {
+                $results[] = ['index' => $i, 'success' => false, 'message' => "Destinataire #$code_dest n'est pas du même opérateur."];
+                continue;
+            }
+
+            if ($montant <= 0) {
+                $results[] = ['index' => $i, 'success' => false, 'message' => "Montant invalide pour le destinataire #$code_dest."];
+                continue;
+            }
+
+            $frais = $this->calculerFrais($montant);
+            $comission = $this->calculerComission($montant, $id_operateur_emetteur, (int) $destinataire['id_operateur']);
+
+            $solde = $this->getSolde($id_emetteur);
+            if (($montant + $frais + $comission) > $solde) {
+                $results[] = ['index' => $i, 'success' => false, 'message' => "Solde insuffisant pour le transfert #$code_dest."];
+                continue;
+            }
+
+            $data = [
+                'id_primary_client' => $id_emetteur,
+                'id_secondary_client' => (int) $destinataire['id'],
+                'id_type_operation' => $type_id,
+                'montant' => $montant,
+                'montant_frais' => $frais,
+                'montant_comission' => $comission,
+                'date_operation' => date('Y-m-d'),
+            ];
+
+            $this->operationModel->insert($data);
+            $results[] = ['index' => $i, 'success' => true, 'message' => "Transfert de $montant Ar vers #$code_dest effectué."];
+        }
+
+        $db->transComplete();
+
+        $allSuccess = empty(array_filter($results, fn($r) => !$r['success']));
+
+        return [
+            'success' => $allSuccess,
+            'message' => $allSuccess
+                ? 'Tous les transferts ont été effectués.'
+                : 'Certains transferts ont échoué.',
+            'results' => $results,
+        ];
+    }
 }

@@ -74,6 +74,31 @@ class Client extends BaseController
         return redirect()->to('/client/dashboard')->with('error', $result['message']);
     }
 
+    public function procederMultiTransfert()
+    {
+        $id_client = session()->get('id_client');
+        if (!$id_client) {
+            return redirect()->to('/')->with('error', 'Veuillez vous connecter.');
+        }
+
+        $destinataires = $this->request->getPost('destinataires');
+        $codeSecret    = $this->request->getPost('code_secret');
+        $montant = (float) $this->request->getPost('montant');
+
+        $result = $this->clientService->insertMultipleTransferts($id_client, $destinataires, $codeSecret, $montant);
+
+        if ($result['success']) {
+            return redirect()->to('/client/dashboard')->with('success', $result['message']);
+        }
+
+        $errors = array_column(array_filter($result['r                <div class="form-group">
+                    <label>Montant (Ar)</label>
+                    <input type="number" name="destinataires[0][montant]" min="1" step="any" placeholder="5 000" required class="montant-input">
+                </div>esults']), 'message');
+        $msg = !empty($errors) ? implode(' ', $errors) : $result['message'];
+        return redirect()->to('/client/dashboard')->with('error', $msg);
+    }
+
     public function getFraisTranche(int $montant)
     {
         if (!session()->get('id_client')) {
