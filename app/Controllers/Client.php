@@ -110,4 +110,9 @@ class Client extends BaseController
         session()->remove('id_client');
         return redirect()->to('/')->with('success', 'Vous êtes déconnecté.');
     }
+
+    public function addEpargne(){
+        $this->request->getPost('epargne-ptc');
+        return redirect()->to('/client/dashboard');
+    }
 }

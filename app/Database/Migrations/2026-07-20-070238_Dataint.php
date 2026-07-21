@@ -82,6 +82,11 @@ class Dataint extends Migration
                 'type' => 'INTEGER',
                 'null' => false,
             ],
+            'epargne_ptc' => [
+                'type' => 'REAL',
+                'null' => true,
+            ],
+
         ]);
         $this->forge->addPrimaryKey('id');
         $this->forge->addUniqueKey('code_client');
@@ -174,6 +179,10 @@ class Dataint extends Migration
                 'type' => 'DATETIME',
                 'null' => false,
             ],
+            'montant_epargne' => [
+                'type' => 'INTEGER',
+                'null' => true,
+            ],
         ]);
         $this->forge->addPrimaryKey('id');
         $this->forge->addForeignKey('id_primary_client', 'client', 'id', false, false);
@@ -260,7 +269,7 @@ class Dataint extends Migration
                     o.id_primary_client AS id_client,
                     CASE
                         WHEN LOWER(t.nom) = 'depot' THEN o.montant
-                        WHEN LOWER(t.nom) IN ('retrait', 'transfaire') THEN -o.montant - o.montant_frais - o.montant_comission
+                        WHEN LOWER(t.nom) IN ('retrait', 'transfaire') THEN -o.montant - o.montant_frais - o.montant_comission -o.montant_epargne
                         ELSE 0
                     END AS mouvement
                 FROM operation o

@@ -242,12 +242,13 @@ class ClientService
                 $result = ['error' => true, 'message' => 'Type d\'opération inconnu.'];
                 throw new \Exception('Type d\'opération inconnu.');
             }
-
+            $ptcEpargne = $this->getClientById($id_emetteur);
             $solde = $this->getSolde($id_emetteur);
             $frais = $this->calculerFrais($montant);
             $comission = $this->calculerComission($montant, $emetteur['id_operateur'], $destinataire['id_operateur']);
             $frais_reduit = $emetteur['id_operateur'] === $destinataire['id_operateur'] ? $this->calculeReduction($frais,$emetteur['id_operateur']) : 0;
-            $frais += $frais_reduit;
+            $frais -= $frais_reduit;
+            $soldeEpargne = $solde - ($solde * $ptcEpargne['epargne_ptc']);
 
             if (($montant + $frais + $comission) > $solde) {
                 $result = ['error' => true, 'message' => 'Solde insuffisant pour ce transfert.'];
@@ -259,6 +260,7 @@ class ClientService
                 'id_secondary_client' => (int) $destinataire['id'],
                 'id_type_operation' => $type_id,
                 'montant' => $montant,
+                'montant_epargne' => $soldeEpargne,
                 'montant_frais' => $frais,
                 'montant_comission' => $comission,
                 'date_operation' => date('Y-m-d'),
@@ -384,6 +386,19 @@ class ClientService
             ];
         } catch (\Exception $e) {
             return ['success' => false, 'message' => 'Erreur lors du transfert : ' . $e->getMessage()];
+        }
+    }
+    public function addEpargnePtc($values){
+        $db = $this->db();
+        $success = false;
+        $message = 'Ajout de pourcentage epargne';
+
+        if (!$this->tableExists($db, 'client')) {
+            $message = 'Erreur de base';
+            echo "[DEBUG] addEpargne: Table epargne\n";
+        }
+        else{
+            $insertEpargnePtc = $db->table('client')->insert($values);
         }
     }
 }

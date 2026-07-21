@@ -173,6 +173,19 @@ FROM (
 )
 WHERE rn = 1;
 
+
+DROP VIEW IF  EXISTS v_solde_client_epargne;
+CREATE VIEW v_solde_client_epargne AS
+SELECT * FROM (
+         SELECT
+             v.*,
+             ROW_NUMBER() OVER (
+                 PARTITION BY v.id_client
+                 ORDER BY v.date_operation DESC, v.id_operation DESC
+                 ) AS rn
+         FROM v_solde_client_historique v
+     )
+WHERE rn = 1;
 -- Opérations détaillées par client
 DROP VIEW IF EXISTS v_operation_client;
 CREATE VIEW v_operation_client AS
@@ -215,3 +228,8 @@ FROM operateur op
 JOIN prefix_operateur po ON po.id_operateur = op.id
 JOIN client c ON c.id_operateur = op.id
 ORDER BY op.nom, c.nom;
+
+ALTER TABLE client ADD column 'epargne_ptc';
+ALTER TABLE operation ADD column 'montant_epargne';
+
+

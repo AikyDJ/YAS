@@ -39,5 +39,10 @@ writable/session/ci_session9463e7bdbf881c5b9bad6ede1487937a
 app/Config/Database.php
 .idea/data_source_mapping.xml
 *.xml
+.idea/data_source_mapping.xml
+*.xml
+/.idea
+*.xml
+*.xml
 writable/session/ci_session0bec18fd46f31f746acbd37e5ea56967
 /writable/session
