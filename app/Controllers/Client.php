@@ -27,7 +27,7 @@ class Client extends BaseController
             'solde'      => $id_client ? $this->clientService->getSolde($id_client) : 0,
             'monnaie'    => 'Ar',
             'nom' => $client ? $client['nom'] : '',
-            'code_client' => $client ? '+261'. $client['prefix_operateur'] . $client['code_client'] : '',
+            'code_client' => $client ? '+261'. $client['code_client'] : '',
             'prenom' => $client ? $client['prenom'] : '',
             'operations' => $id_client ? $this->clientService->getOperations($id_client) : [],
             'frais'     => $id_client ? $this->operationService->getAllFraisTranches() : []

@@ -44,3 +44,5 @@ app/Config/Database.php
 /.idea
 *.xml
 *.xml
+writable/session/ci_session0bec18fd46f31f746acbd37e5ea56967
+/writable/session
