@@ -40,7 +40,7 @@ class AuthService
         // 331234567 → prefix = 033 (3 chiffres avec 0), code_client = 1234567
         if (preg_match('/^(\d{2})(\d{7})$/', $number, $m)) {
             return [
-                'prefix'      => '0' . $m[1],
+                'prefix'      => $m[1],
                 'code_client' => $m[2],
             ];
         }

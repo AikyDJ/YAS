@@ -40,12 +40,15 @@
                 <div class="op-nav">
                     <a href="?operation=depot/retrait" class="op-link <?= (!isset($_GET['operation']) || $_GET['operation'] === 'depot/retrait') ? 'active' : '' ?>">Dépôt / Retrait</a>
                     <a href="?operation=transfert" class="op-link <?= (isset($_GET['operation']) && $_GET['operation'] === 'transfert') ? 'active' : '' ?>">Transfert</a>
+                    <a href="?operation=multi-transfert" class="op-link <?= (isset($_GET['operation']) && $_GET['operation'] === 'multi-transfert') ? 'active' : '' ?>">Multi Transfert</a>
                 </div>
                 <div class="op-content">
                     <?php
                         $op = $_GET['operation'] ?? 'depot/retrait';
                         if ($op === 'transfert') {
                             echo view('user/transfert_op', ['frais' => $frais ?? []]);
+                        } elseif ($op === 'multi-transfert') {
+                            echo view('user/multi_transfert', ['frais' => $frais ?? []]);
                         } else {
                             echo view('user/depot_retrait', ['frais' => $frais ?? []]);
                         }

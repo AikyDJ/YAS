@@ -33,9 +33,11 @@ CREATE TABLE IF NOT EXISTS client(
 
 CREATE TABLE IF NOT EXISTS frais_barem(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_type_operation INTEGER NOT NULL,
     montant REAL NOT NULL,
     min_montant REAL NOT NULL,
-    max_montant REAL NOT NULL
+    max_montant REAL NOT NULL,
+    FOREIGN KEY (id_type_operation) REFERENCES type_operation(id)
 );
 
 CREATE TABLE IF NOT EXISTS type_operation(
@@ -81,7 +83,7 @@ WITH mouvements AS (
         o.id_primary_client AS id_client,
         CASE
             WHEN LOWER(t.nom) = 'depot' THEN o.montant
-            WHEN LOWER(t.nom) IN ('retrait', 'transfaire') THEN -o.montant - o.montant_frais
+            WHEN LOWER(t.nom) IN ('retrait', 'transfaire') THEN -o.montant - o.montant_frais - o.montant_comission
             ELSE 0
         END AS mouvement
     FROM operation o
@@ -119,7 +121,7 @@ WITH mouvements AS (
         o.id_primary_client AS id_client,
         CASE
             WHEN LOWER(t.nom) = 'depot' THEN o.montant
-            WHEN LOWER(t.nom) IN ('retrait', 'transfaire') THEN -o.montant - o.montant_frais
+            WHEN LOWER(t.nom) IN ('retrait', 'transfaire') THEN -o.montant - o.montant_frais - o.montant_comission
             ELSE 0
         END AS mouvement
     FROM operation o
