@@ -42,3 +42,4 @@ app/Config/Database.php
 .idea/data_source_mapping.xml
 *.xml
 /.idea
+*.xml
