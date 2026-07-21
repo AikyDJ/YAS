@@ -54,15 +54,15 @@ class Datainit extends Seeder
 
         // ---------------------------------------------------------
         // Clients
-        // id_operateur : 1 = Orange Money, 2 = Mvola, 3 = Airtel Money
+        // id_operateur : 1 = Airtel Money , 2 = Mvola , 3 = Orange Money
         // ---------------------------------------------------------
         $this->db->table('client')->insertBatch([
-            ['nom' => 'Rakoto', 'prenom' => 'Jean', 'code_client' => '1234567', 'code_secret' => '0000', 'id_operateur' => 1],
-            ['nom' => 'Rasoa', 'prenom' => 'Marie', 'code_client' => '0123456', 'code_secret' => '0000', 'id_operateur' => 1],
-            ['nom' => 'Pierre', 'prenom' => 'Jacques', 'code_client' => '0054321', 'code_secret' => '0000', 'id_operateur' => 1],
-            ['nom' => 'Ral', 'prenom' => 'Entouine', 'code_client' => '0004321', 'code_secret' => '0000', 'id_operateur' => 1],
-            ['nom' => 'Andry', 'prenom' => 'Paul', 'code_client' => '0012345', 'code_secret' => '0000', 'id_operateur' => 2],
-            ['nom' => 'Hery', 'prenom' => 'Nirina', 'code_client' => '0001234', 'code_secret' => '0000', 'id_operateur' => 3],
+            ['nom' => 'Rakoto', 'prenom' => 'Jean', 'code_client' => '331234567', 'code_secret' => '0000', 'id_operateur' => 1],
+            ['nom' => 'Rasoa', 'prenom' => 'Marie', 'code_client' => '330123456', 'code_secret' => '0000', 'id_operateur' => 1],
+            ['nom' => 'Pierre', 'prenom' => 'Jacques', 'code_client' => '330054321', 'code_secret' => '0000', 'id_operateur' => 1],
+            ['nom' => 'Ral', 'prenom' => 'Entouine', 'code_client' => '330004321', 'code_secret' => '0000', 'id_operateur' => 1],
+            ['nom' => 'Andry', 'prenom' => 'Paul', 'code_client' => '340012345', 'code_secret' => '0000', 'id_operateur' => 2],
+            ['nom' => 'Hery', 'prenom' => 'Nirina', 'code_client' => '320001234', 'code_secret' => '0000', 'id_operateur' => 3],
         ]);
 
         // ---------------------------------------------------------

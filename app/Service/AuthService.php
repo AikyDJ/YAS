@@ -21,8 +21,8 @@ class AuthService
      * ou null si le format est invalide.
      *
      * Formats acceptés :
-     *   +261331234567  →  prefix = 033,  code_client = 1234567
-     *   0331234567     →  prefix = 033,  code_client = 1234567
+     *   +261331234567  →  prefix = 33,  code_client = 331234567
+     *   0331234567     →  prefix = 33,  code_client = 331234567
      */
     private function parseTelephone(string $telephone): ?array
     {
@@ -36,16 +36,12 @@ class AuthService
         elseif (preg_match('/^0(\d{9,10})$/', $number, $m)) {
             $number = $m[1];
         }
+        
 
-        // 331234567 → prefix = 033 (3 chiffres avec 0), code_client = 1234567
-        if (preg_match('/^(\d{2})(\d{7})$/', $number, $m)) {
-            return [
-                'prefix'      => $m[1],
-                'code_client' => $m[2],
-            ];
-        }
-
-        return null;
+        return $number && strlen($number) >= 9 ? [
+            'prefix'      => substr($number, 0, 2),
+            'code_client' => $number,
+        ] : null;
     }
 
     /**
