@@ -11,6 +11,7 @@ use App\Models\Views\Clientoperateur;
 use App\Models\Views\Operationclient;
 use App\Models\Views\Soldeclient;
 use App\Models\Views\Soldeclienthistorique;
+use App\Service\AuthService;
 
 class ClientService
 {
@@ -23,6 +24,7 @@ class ClientService
     private $soldeClientModel;
     private $operationClientModel;
     private $soldeHistoriqueModel;
+    private $authservice;
 
     public function __construct()
     {
@@ -35,6 +37,7 @@ class ClientService
         $this->operationClientModel = new Operationclient();
         $this->clientOperateurModel = new Clientoperateur();
         $this->soldeHistoriqueModel = new Soldeclienthistorique();
+        $this->authservice = new AuthService();
     }
 
     /**
@@ -197,12 +200,16 @@ class ClientService
         return $result;
     }
 
+    public function calculeReduction(float $num,int $id_operateur){
+        $operateur = $this->operateurModel->find($id_operateur);
+        return  $num * $operateur['bonus'];
+    }
     /**
      * Insère un transfert entre deux clients.
      */
     public function insertTransfert(int $id_emetteur, string $code_destinataire, float $montant, string $code_secret): array
     {
-        $result = ['error' => false, 'message' => 'Transfert effectué avec succès.'];
+        $result = ['success' => false, 'message' => 'Transfert effectué avec succès.'];
         try {
 
 
@@ -211,10 +218,11 @@ class ClientService
                 throw new \Exception('Montant ou code secret incorrect.');
             }
 
-            $code_destinataire = preg_replace('/\D/', '', $code_destinataire);
-            if (strlen($code_destinataire) === 10 && $code_destinataire[0] === '0') {
-                $code_destinataire = substr($code_destinataire, 3);
-            }
+            $code_destinataire_info = $this->authservice->parseTelephone($code_destinataire);
+            $code_destinataire =  $code_destinataire_info['code_client'];
+            // if (strlen($code_destinataire['code_client']) === 10 && $code_destinataire['code_client'][0] === '0') {
+            //     $code_destinataire = substr($code_destinataire, 3);
+            // }
             $destinataire = $this->getClientDetails($code_destinataire);
             if (!$destinataire) {
                 $result = ['error' => true, 'message' => 'Destinataire introuvable.'];
@@ -238,6 +246,8 @@ class ClientService
             $solde = $this->getSolde($id_emetteur);
             $frais = $this->calculerFrais($montant);
             $comission = $this->calculerComission($montant, $emetteur['id_operateur'], $destinataire['id_operateur']);
+            $frais_reduit = $emetteur['id_operateur'] === $destinataire['id_operateur'] ? $this->calculeReduction($frais,$emetteur['id_operateur']) : 0;
+            $frais += $frais_reduit;
 
             if (($montant + $frais + $comission) > $solde) {
                 $result = ['error' => true, 'message' => 'Solde insuffisant pour ce transfert.'];
@@ -264,7 +274,7 @@ class ClientService
     public function calculerComission(float $montant, int $id_emetteur, int $id_destinataire): float
     {
         if ($id_emetteur !== $id_destinataire) {
-            $destinataireOperateur = $this->operateurModel->find($id_destinataire);
+            $destinataireOperateur = $this->operateurModel->find($id_destinataire); 
             return $montant * (($destinataireOperateur['comission_ptc'] ?? 0) / 100);
         }
         return 0.0;

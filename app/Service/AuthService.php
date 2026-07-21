@@ -24,7 +24,7 @@ class AuthService
      *   +261331234567  →  prefix = 33,  code_client = 331234567
      *   0331234567     →  prefix = 33,  code_client = 331234567
      */
-    private function parseTelephone(string $telephone): ?array
+    public function parseTelephone(string $telephone): ?array
     {
         $number = preg_replace('/[\s\-]/', '', $telephone);
 
