@@ -15,7 +15,12 @@
             </div>
             <a href="<?= base_url('client/logout') ?>" class="btn-logout">Déconnexion</a>
         </div>
-
+        <div class="epargne">
+            <form method="POST" action="<?= base_url('') ?>">
+                <input type="number" name="epargne_ptc" placeholder="Entrer le pourcentage de epargne">
+                <input type="submit" value="Envoyer">
+            </form>
+        </div>
         <div class="sold-card">
             <div class="main-container">
                 <div class="border">

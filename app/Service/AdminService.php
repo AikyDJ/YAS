@@ -3,9 +3,13 @@
 namespace App\Service;
 
 use Throwable;
+use App\Models\Client;
 
 class AdminService
 {
+    private $clientModels;
+
+
     private function db()
     {
         return \Config\Database::connect();
@@ -718,4 +722,73 @@ class AdminService
             ];
         }
     }
+
+
+
+//    public function insertTransfert(int $id_emetteur, string $code_destinataire, float $montant, string $code_secret): array
+//    {
+//        $result = ['success' => false, 'message' => 'Transfert effectué avec succès.'];
+//        try {
+//
+//
+//            if ($montant <= 0 || !$this->verifyCodeSecret($id_emetteur, $code_secret)) {
+//                $result = ['error' => true, 'message' => 'Montant ou code secret incorrect.'];
+//                throw new \Exception('Montant ou code secret incorrect.');
+//            }
+//
+//            $code_destinataire_info = $this->authservice->parseTelephone($code_destinataire);
+//            $code_destinataire =  $code_destinataire_info['code_client'];
+//            // if (strlen($code_destinataire['code_client']) === 10 && $code_destinataire['code_client'][0] === '0') {
+//            //     $code_destinataire = substr($code_destinataire, 3);
+//            // }
+//            $destinataire = $this->getClientDetails($code_destinataire);
+//            if (!$destinataire) {
+//                $result = ['error' => true, 'message' => 'Destinataire introuvable.'];
+//                throw new \Exception('Destinataire introuvable.');
+//            }
+//            // verifier detinater meme operateur
+//            $emetteur = $this->getClientById($id_emetteur);
+//
+//
+//            if ((int) $destinataire['id'] === $id_emetteur) {
+//                $result = ['error' => true, 'message' => 'Vous ne pouvez pas vous transférer à vous-même.'];
+//                throw new \Exception('Vous ne pouvez pas vous transférer à vous-même.');
+//            }
+//
+//            $type_id = $this->getTypeOperationId('transfaire');
+//            if ($type_id === null) {
+//                $result = ['error' => true, 'message' => 'Type d\'opération inconnu.'];
+//                throw new \Exception('Type d\'opération inconnu.');
+//            }
+//
+//            $solde = $this->getSolde($id_emetteur);
+//            $frais = $this->calculerFrais($montant);
+//            $comission = $this->calculerComission($montant, $emetteur['id_operateur'], $destinataire['id_operateur']);
+//            $frais_reduit = $emetteur['id_operateur'] === $destinataire['id_operateur'] ? $this->calculeReduction($frais,$emetteur['id_operateur']) : 0;
+//            $frais += $frais_reduit;
+//
+//            if (($montant + $frais + $comission) > $solde) {
+//                $result = ['error' => true, 'message' => 'Solde insuffisant pour ce transfert.'];
+//                throw new \Exception('Solde insuffisant pour ce transfert.');
+//            }
+//
+//            $data = [
+//                'id_primary_client' => $id_emetteur,
+//                'id_secondary_client' => (int) $destinataire['id'],
+//                'id_type_operation' => $type_id,
+//                'montant' => $montant,
+//                'montant_frais' => $frais,
+//                'montant_comission' => $comission,
+//                'date_operation' => date('Y-m-d'),
+//            ];
+//
+//            $this->operationModel->insert($data);
+//        } catch (\Exception $e) {
+//            $result = ['success' => false, 'message' => 'Erreur lors du transfert : ' . $e->getMessage()];
+//            throw $e;
+//        }
+//        return $result;
+//    }
+
+
 }
