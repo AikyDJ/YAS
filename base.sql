@@ -11,7 +11,8 @@ PRAGMA foreign_keys = ON;
 CREATE TABLE IF NOT EXISTS operateur(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     nom TEXT NOT NULL,
-    comission_ptc REAL NOT NULL
+    comission_ptc REAL NOT NULL,
+    bonus REAL NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS prefix_operateur(

@@ -12,9 +12,9 @@ class Datainit extends Seeder
         // Opérateurs (sans code_operateur — c'est dans prefix_operateur)
         // ---------------------------------------------------------
         $this->db->table('operateur')->insertBatch([
-            ['nom' => 'Airtel Money', 'comission_ptc' => 0.04],
-            ['nom' => 'Mvola', 'comission_ptc' => 0.03],
-            ['nom' => 'Orange Money', 'comission_ptc' => 0.05],
+            ['nom' => 'Airtel Money', 'comission_ptc' => 0.04,'bonus' => 0.50],
+            ['nom' => 'Mvola', 'comission_ptc' => 0.03,'bonus' => 0.50],
+            ['nom' => 'Orange Money', 'comission_ptc' => 0.05,'bonus' => 0.50],
         ]);
 
         // ---------------------------------------------------------

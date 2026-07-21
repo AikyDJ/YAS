@@ -24,6 +24,10 @@ class Dataint extends Migration
                 'type' => 'REAL',
                 'null' => false,
             ],
+            'bonus' => [
+                'type' => 'REAL',
+                'null' => false,
+            ],
         ]);
         $this->forge->addPrimaryKey('id');
         $this->forge->createTable('operateur');
